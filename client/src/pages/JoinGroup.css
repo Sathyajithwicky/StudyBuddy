@@ -1,0 +1,141 @@
+.join-group-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+.join-group-container h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 2rem;
+}
+
+.category-filters {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.category-btn {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 25px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.category-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.category-btn.active {
+  background-color: #000;
+  color: white;
+}
+
+.study-groups-grid {
+  display: grid;
+ 
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.group-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 2px solid #000;
+  transition: transform 0.3s ease;
+}
+
+.group-card:hover {
+  transform: translateY(-5px);
+}
+
+.group-card h3 {
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.group-info {
+  margin-bottom: 1rem;
+}
+
+.group-info p {
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.level-tag {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  background-color: #e9ecef;
+  border-radius: 15px;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.join-btn {
+  width: 100%;
+  padding: 0.8rem;
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.join-btn:hover {
+  background-color: #333;
+}
+
+@media (max-width: 768px) {
+  .study-groups-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .category-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .category-btn {
+    width: 100%;
+  }
+}
+
+.search-and-filter {
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.search-input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: block;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.no-results {
+  text-align: center;
+  color: #666;
+  font-size: 1.1rem;
+  grid-column: 1 / -1;
+  padding: 2rem;
+} 

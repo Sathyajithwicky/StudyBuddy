@@ -1,0 +1,71 @@
+import React from "react";
+import { Routes, Route, BrowserRouter } from "react-router-dom";
+import NavBar from "./components/NavBar";
+import HomePage from "./pages/Homepage";
+import JoinGroup from "./pages/JoinGroup";
+import Pomodoro from "./pages/Pomodoro";
+import Feedback from "./pages/Feedback";
+import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import Profile from "./pages/Profile";
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import PhysicsGroup from './pages/PhysicsGroup';
+import ChemistryGroup from './pages/groups/ChemistryGroup';
+import BiologyGroup from './pages/groups/BiologyGroup';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <NavBar />
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<SignUp />} />
+          <Route path="/signup" element={<SignUp />} />
+
+          {/* Protected routes */}
+          <Route path="/pomodoro" element={
+            <ProtectedRoute>
+              <Pomodoro />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/join-group" element={
+            <ProtectedRoute>
+              <JoinGroup />
+            </ProtectedRoute>
+          } />
+          <Route path="/feedback" element={
+            <ProtectedRoute>
+              <Feedback />
+            </ProtectedRoute>
+          } />
+          <Route path="/physics-group" element={
+            <ProtectedRoute>
+              <PhysicsGroup />
+            </ProtectedRoute>
+          } />
+          <Route path="/chemistry-group" element={
+            <ProtectedRoute>
+              <ChemistryGroup />
+            </ProtectedRoute>
+          } />
+          <Route path="/biology-group" element={
+            <ProtectedRoute>
+              <BiologyGroup />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
+
+export default App;

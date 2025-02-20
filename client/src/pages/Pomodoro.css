@@ -1,0 +1,126 @@
+.pomodoro-container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.pomodoro-box {
+  background-color: white;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 100%;
+  max-width: 500px;
+}
+
+.pomodoro-box h1 {
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  color: #333;
+}
+
+.timer-display {
+  font-size: 6rem;
+  font-weight: bold;
+  margin: 2rem 0;
+  font-family: monospace;
+  color: #333;
+  text-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.timer-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.control-btn {
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 50px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.control-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.preset-times {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.preset-btn {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.preset-btn:hover {
+  background-color: #f0f0f0;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.session-info {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.session-info p {
+  margin: 0.5rem 0;
+}
+
+.fullscreen-notice {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid #ffeeba;
+}
+
+@media (max-width: 768px) {
+  .pomodoro-box {
+    padding: 2rem;
+  }
+
+  .timer-display {
+    font-size: 4rem;
+  }
+
+  .timer-controls {
+    flex-direction: column;
+  }
+
+  .preset-times {
+    flex-wrap: wrap;
+  }
+
+  .control-btn, .preset-btn {
+    width: 100%;
+  }
+}
