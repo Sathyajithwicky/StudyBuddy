@@ -17,24 +17,44 @@ const Profile = () => {
   const { logout, token } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState({
+    username: '',
+    email: '',
+    joinedGroups: []
+  });
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         if (!token) {
-          setError('No authentication token found');
+          console.log('No token found in auth context');
+          setError('Please log in to view your profile');
+          logout();
+          navigate('/login');
           return;
         }
 
+        console.log('Token exists:', !!token);
+
+        // Get user profile data with joined groups included
         const response = await axios.get('/api/auth/profile', {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
 
+        console.log('Profile response:', response.data);
+
         if (response.data.success) {
-          setUserData(response.data.user);
+          // Assume joined groups are included in the user data
+          const userData = {
+            ...response.data.user,
+            joinedGroups: response.data.user.joinedGroups || []
+          };
+
+          setUserData(userData);
+          setProfile(userData);
+
           if (response.data.user.examDate) {
             setExamData({
               examName: response.data.user.examName,
@@ -45,10 +65,12 @@ const Profile = () => {
       } catch (error) {
         console.error('Error fetching profile:', error);
         if (error.response?.status === 401) {
-          logout(); // Token expired or invalid
+          console.log('Unauthorized access, redirecting to login');
+          logout();
           navigate('/login');
         } else {
-          setError('Failed to load user profile');
+          const errorMessage = error.response?.data?.message || 'Failed to load user profile. Please try again later.';
+          setError(errorMessage);
         }
       } finally {
         setLoading(false);
@@ -56,7 +78,7 @@ const Profile = () => {
     };
 
     fetchUserProfile();
-  }, [token, logout, navigate]);
+  }, [token, logout, navigate, window.location.search]);
 
   const handleExamChange = async (e) => {
     const { name, value } = e.target;
@@ -289,6 +311,31 @@ const Profile = () => {
         <button className="logout-button" onClick={handleLogout}>
           Logout
         </button>
+      </div>
+
+      <div className="profile-section">
+        <h3>Joined Groups</h3>
+        <div className="row">
+          {userData?.joinedGroups?.length > 0 ? (
+            userData.joinedGroups.map(group => (
+              <div className="col-md-4 mb-3" key={group._id}>
+                <div className="card">
+                  <div className="card-body">
+                    <h5 className="card-title">{group.name}</h5>
+                    <p className="card-text">{group.description}</p>
+                    <p className="card-text">
+                      <small className="text-muted">Category: {group.category}</small>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-12">
+              <p>You haven't joined any groups yet.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
