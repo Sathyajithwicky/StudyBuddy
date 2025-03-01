@@ -1,10 +1,9 @@
 .exam-countdown {
   background-color: #f8f9fa;
-  padding: 1.5rem;
+  padding: 20px;
   border-radius: 8px;
+  margin: 20px 0;
   text-align: center;
-  margin-top: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .exam-countdown h3 {
@@ -16,7 +15,8 @@
 .countdown-timer {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 20px;
+  margin-top: 15px;
 }
 
 .countdown-item {
@@ -26,17 +26,15 @@
 }
 
 .countdown-value {
-  font-size: 2rem;
+  font-size: 24px;
   font-weight: bold;
-  color: #000;
-  min-width: 2.5rem;
+  color: #007bff;
 }
 
 .countdown-label {
-  font-size: 0.8rem;
-  color: #666;
-  text-transform: uppercase;
-  margin-top: 0.25rem;
+  font-size: 14px;
+  color: #6c757d;
+  margin-top: 5px;
 }
 
 @media (max-width: 480px) {

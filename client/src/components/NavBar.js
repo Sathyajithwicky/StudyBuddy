@@ -4,6 +4,7 @@ import './NavBar.css';
 import logo from '../assets/studybuddylogo.png';
 import { useAuth } from '../context/AuthContext';
 import defaultProfile from '../assets/default-profile.png';
+import { FaComments } from 'react-icons/fa';
 
 function NavBar() {
   const location = useLocation();
@@ -46,13 +47,20 @@ function NavBar() {
               <Link to="/register" className="nav-link">Sign Up</Link>
             </>
           ) : (
-            <div className="nav-profile">
+            <div className="profile-section">
               <Link to="/profile">
                 <img 
                   src={defaultProfile} 
                   alt={`${user?.firstName}'s Profile`} 
                   className="profile-image" 
                 />
+              </Link>
+              <Link 
+                to="/reviews" 
+                className="review-button"
+                title="View my reviews"
+              >
+                <FaComments /> Reviews
               </Link>
             </div>
           )}

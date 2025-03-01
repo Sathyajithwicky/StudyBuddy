@@ -13,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PhysicsGroup from './pages/PhysicsGroup';
 import ChemistryGroup from './pages/groups/ChemistryGroup';
 import BiologyGroup from './pages/groups/BiologyGroup';
+import Reviews from './pages/Reviews';
 
 function App() {
   return (
@@ -60,6 +61,11 @@ function App() {
           <Route path="/biology-group" element={
             <ProtectedRoute>
               <BiologyGroup />
+            </ProtectedRoute>
+          } />
+          <Route path="/reviews" element={
+            <ProtectedRoute>
+              <Reviews />
             </ProtectedRoute>
           } />
         </Routes>

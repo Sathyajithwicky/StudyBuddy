@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import './Feedback.css';
 
 const Feedback = () => {
+  const { token } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -28,11 +30,20 @@ const Feedback = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!token) {
+      setErrorMessage('Please log in to submit feedback');
+      setShowErrorPopup(true);
+      setTimeout(() => setShowErrorPopup(false), 3000);
+      return;
+    }
+
     try {
-      const response = await axios.post(
-        'http://localhost:5001/api/feedback/submit',
-        formData
-      );
+      const response = await axios.post('/api/feedback/submit', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
       if (response.data.success) {
         setShowSuccessPopup(true);
@@ -45,13 +56,11 @@ const Feedback = () => {
           suggestions: '',
           isAnonymous: false
         });
-
-        setTimeout(() => {
-          setShowSuccessPopup(false);
-        }, 3000);
+        setTimeout(() => setShowSuccessPopup(false), 3000);
       }
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Error submitting feedback');
+      console.error('Error submitting feedback:', error);
+      setErrorMessage(error.response?.data?.message || 'Failed to submit feedback');
       setShowErrorPopup(true);
       setTimeout(() => setShowErrorPopup(false), 3000);
     }

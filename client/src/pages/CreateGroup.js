@@ -4,6 +4,7 @@ import axios from 'axios';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import { useAuth } from '../context/AuthContext';
+import { FaStar } from 'react-icons/fa';
 
 function CreateGroup() {
   const navigate = useNavigate();
@@ -15,11 +16,19 @@ function CreateGroup() {
   });
   const [showModal, setShowModal] = useState(false);
   const [createdGroupId, setCreatedGroupId] = useState(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Validate input
+      if (!groupData.name.trim() || !groupData.description.trim() || !groupData.category.trim()) {
+        alert('Please fill in all fields');
+        return;
+      }
+
       const response = await axios.post('/api/groups/create', groupData, {
         headers: {
           'Content-Type': 'application/json',
@@ -39,7 +48,11 @@ function CreateGroup() {
 
   const handleJoinGroup = async (addToProfile) => {
     try {
-      const joinResponse = await axios.post(`/api/groups/${createdGroupId}/join`, {}, {
+      const joinResponse = await axios.post(`/api/groups/${createdGroupId}/join`, {
+        groupName: groupData.name,
+        groupDescription: groupData.description,
+        groupCategory: groupData.category
+      }, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -47,19 +60,43 @@ function CreateGroup() {
 
       if (joinResponse.data.success) {
         setShowModal(false);
+        
         if (addToProfile) {
-          setShowConfirmation(true);
+          const groupShortcut = {
+            _id: createdGroupId,
+            name: groupData.name,
+            description: groupData.description,
+            category: groupData.category
+          };
+
+          await axios.put('/api/auth/update-joined-groups', {
+            group: groupShortcut
+          }, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          // Show Bootstrap alert
+          setAlertMessage(`${groupData.name} has been added to your profile!`);
+          setShowAlert(true);
+          
+          // Navigate after delay
           setTimeout(() => {
-            setShowConfirmation(false);
             navigate('/profile?refresh=' + Date.now());
-          }, 2000);
+          }, 3000);
         } else {
-          navigate('/study-groups');
+          setAlertMessage(`You have joined ${groupData.name}`);
+          setShowAlert(true);
+          setTimeout(() => {
+            navigate('/study-groups');
+          }, 3000);
         }
       }
     } catch (joinError) {
       console.error('Error joining group:', joinError);
-      alert('Failed to join group. Please try again.');
+      setAlertMessage('Failed to join group. Please try again.');
+      setShowAlert(true);
     }
   };
 
@@ -68,6 +105,28 @@ function CreateGroup() {
       ...groupData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleFavoriteClick = async (groupId) => {
+    try {
+      const response = await axios.post(`/api/groups/${groupId}/favorite`, 
+        { isFavorite: !isFavorite },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setIsFavorite(!isFavorite);
+        alert(isFavorite ? 'Removed from favorites' : 'Added to favorites!');
+      }
+    } catch (error) {
+      console.error('Error updating favorite status:', error);
+      alert('Failed to update favorite status. Please try again.');
+    }
   };
 
   // Check if token exists and redirect if not
@@ -79,9 +138,27 @@ function CreateGroup() {
 
   return (
     <div className="container mt-5">
-      {showConfirmation && (
-        <div className="alert alert-success" role="alert">
-          Group successfully added to your profile!
+      {showAlert && (
+        <div 
+          className="alert alert-success alert-dismissible fade show" 
+          role="alert"
+          style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            minWidth: '300px',
+            textAlign: 'center',
+            border: '2px solid #000'
+          }}
+        >
+          <strong>{alertMessage}</strong>
+          <button 
+            type="button" 
+            className="btn-close" 
+            onClick={() => setShowAlert(false)}
+          ></button>
         </div>
       )}
 
@@ -141,6 +218,21 @@ function CreateGroup() {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <div className="card">
+        <div className="card-body">
+          <div className="d-flex justify-content-between align-items-center">
+            <h5 className="card-title">{groupData.name}</h5>
+            <button 
+              className={`favorite-btn ${isFavorite ? 'active' : ''}`}
+              onClick={() => handleFavoriteClick(createdGroupId)}
+            >
+              <FaStar className={isFavorite ? 'filled' : ''} />
+            </button>
+          </div>
+          {/* ... rest of your card content ... */}
+        </div>
+      </div>
     </div>
   );
 }

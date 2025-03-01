@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './ExamCountdown.css';
+import PropTypes from 'prop-types';
 
 const ExamCountdown = ({ examDate, examName }) => {
   const [timeLeft, setTimeLeft] = useState({
@@ -9,35 +10,50 @@ const ExamCountdown = ({ examDate, examName }) => {
     seconds: 0
   });
 
-  useEffect(() => {
-    const calculateTimeLeft = () => {
+  // Memoize the countdown calculation
+  const calculateTimeLeft = React.useCallback(() => {
+    try {
       const examTime = new Date(examDate).getTime();
       const now = new Date().getTime();
       const difference = examTime - now;
 
       if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-        setTimeLeft({ days, hours, minutes, seconds });
-      } else {
-        // If exam date has passed
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return {
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((difference % (1000 * 60)) / 1000)
+        };
       }
-    };
-
-    // Calculate immediately
-    calculateTimeLeft();
-    
-    // Update every second
-    const timer = setInterval(calculateTimeLeft, 1000);
-
-    return () => clearInterval(timer);
+      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    } catch (error) {
+      console.error('Error calculating time left:', error);
+      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    }
   }, [examDate]);
 
-  if (!examDate) return null;
+  useEffect(() => {
+    if (!examDate) {
+      return;
+    }
+
+    // Calculate immediately
+    const timeLeft = calculateTimeLeft();
+    setTimeLeft(timeLeft);
+
+    // Update every second
+    const timer = setInterval(() => {
+      const timeLeft = calculateTimeLeft();
+      setTimeLeft(timeLeft);
+    }, 1000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(timer);
+  }, [calculateTimeLeft]);
+
+  if (!examDate) {
+    return null;
+  }
 
   // Show a message if exam date has passed
   if (timeLeft.days === 0 && timeLeft.hours === 0 && 
@@ -51,7 +67,7 @@ const ExamCountdown = ({ examDate, examName }) => {
 
   return (
     <div className="exam-countdown">
-      <h3>Time Until {examName}</h3>
+      <h4>Countdown to {examName}</h4>
       <div className="countdown-timer">
         <div className="countdown-item">
           <span className="countdown-value">{timeLeft.days}</span>
@@ -72,6 +88,11 @@ const ExamCountdown = ({ examDate, examName }) => {
       </div>
     </div>
   );
+};
+
+ExamCountdown.propTypes = {
+  examDate: PropTypes.string.isRequired,
+  examName: PropTypes.string.isRequired
 };
 
 export default ExamCountdown; 

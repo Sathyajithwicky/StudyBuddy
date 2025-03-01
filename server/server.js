@@ -2,6 +2,7 @@ const express = require('express');
 const connectDB = require('./config/db');
 const cors = require('cors');
 const path = require('path');
+const feedbackRoutes = require('./routes/feedback');
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use((req, res, next) => {
 // Define Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/messages', require('./routes/messages'));
+app.use('/api/feedback', feedbackRoutes);
 
 // Test route
 app.get('/test', (req, res) => {
