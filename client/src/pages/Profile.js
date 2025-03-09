@@ -3,28 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Profile.css';
 import { useAuth } from '../context/AuthContext';
-import ExamCountdown from '../components/ExamCountdown';
-
-export const userService = {
-  getProfile: async (token) => {
-    const response = await axios.get('/api/auth/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return response.data;
-  },
-  
-  updateExam: async (token, examData) => {
-    const response = await axios.put('/api/auth/update-exam-date', examData, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    return response.data;
-  }
-};
+import { FaSignOutAlt, FaUser, FaUserFriends } from 'react-icons/fa';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -38,23 +17,121 @@ const Profile = () => {
     examDate: ''
   });
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  
+  // Add state for user's study groups
+  const [myStudyGroups, setMyStudyGroups] = useState([]);
+  
+  // Add state for countdown timer
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  
+  // Quiz data for the right column
+  const quizData = [
+    { level: 'Advanced Level', subject: 'Physics', attempted: '10/100', average: '60%' },
+    { level: 'Advanced Level', subject: 'Physics', attempted: '10/100', average: '60%' },
+    { level: 'Advanced Level', subject: 'Physics', attempted: '10/100', average: '60%' }
+  ];
 
+  // FIRST: Immediately try to get data from localStorage when component mounts
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        if (!token) {
-          setError('No authentication token found');
-          setLoading(false);
-          return;
+    // Try to get exam data from localStorage first
+    try {
+      console.log('Checking localStorage for exam data');
+      const storedExams = localStorage.getItem('userExams');
+      console.log('Raw localStorage data:', storedExams);
+      
+      if (storedExams) {
+        const parsedExams = JSON.parse(storedExams);
+        console.log('Parsed localStorage data:', parsedExams);
+        
+        if (parsedExams.length > 0) {
+          const latestExam = parsedExams[0]; // Get the first exam (we're only storing one)
+          console.log('Found exam in localStorage:', latestExam);
+          
+          // Update the state immediately
+          setUserData({
+            ...userData,
+            examName: latestExam.examName,
+            examDate: latestExam.examDate
+          });
+          
+          setExamData({
+            examName: latestExam.examName,
+            examDate: latestExam.examDate
+          });
         }
+      }
+      
+      // Try to get user's study groups from localStorage
+      const storedGroups = localStorage.getItem('myStudyGroups');
+      if (storedGroups) {
+        const parsedGroups = JSON.parse(storedGroups);
+        console.log('Found study groups in localStorage:', parsedGroups);
+        setMyStudyGroups(parsedGroups);
+      }
+    } catch (e) {
+      console.error('Error reading from localStorage:', e);
+    }
+    
+    // Continue with API call to get user profile
+    fetchUserProfile();
+  }, []); // Empty dependency array ensures this runs only once
 
-        const response = await axios.get('/api/auth/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+  // Function to handle navigating to a study group
+  const handleStudyGroupClick = (subject) => {
+    const routes = {
+      'Physics': '/physics-group',
+      'Chemistry': '/chemistry-group',
+      'Biology': '/biology-group',
+      // Add more mappings for other subjects
+    };
+    
+    navigate(routes[subject] || '/join-group');
+  };
+  
+  // Function to remove a study group
+  const handleRemoveStudyGroup = (groupId) => {
+    // Filter out the removed group
+    const updatedGroups = myStudyGroups.filter(group => group.id !== groupId);
+    setMyStudyGroups(updatedGroups);
+    localStorage.setItem('myStudyGroups', JSON.stringify(updatedGroups));
+    
+    setSuccessMessage('Study group removed from profile');
+    setShowSuccessMessage(true);
+    setTimeout(() => {
+      setShowSuccessMessage(false);
+    }, 3000);
+  };
 
-        if (response.data.success) {
+  // Separate function to fetch user profile
+  const fetchUserProfile = async () => {
+    try {
+      if (!token) {
+        setError('No authentication token found');
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get('/api/auth/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        // Only update user data if no localStorage data was found
+        const storedExams = localStorage.getItem('userExams');
+        const hasLocalExams = storedExams && JSON.parse(storedExams).length > 0;
+        
+        if (hasLocalExams) {
+          // Merge API data with localStorage data
+          setUserData(prev => ({
+            ...response.data.user,
+            examName: prev.examName || response.data.user.examName,
+            examDate: prev.examDate || response.data.user.examDate
+          }));
+        } else {
+          // No local exams, just use API data
           setUserData(response.data.user);
           
           if (response.data.user.examDate) {
@@ -64,21 +141,44 @@ const Profile = () => {
             });
           }
         }
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        if (error.response?.status === 401) {
-          logout();
-          navigate('/login');
-        } else {
-          setError('Failed to load user profile. Please try again later.');
-        }
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      
+      if (error.response?.status === 401) {
+        logout();
+        navigate('/login');
+      } else {
+        setError('Failed to load user profile. Please try again later.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchUserProfile();
-  }, [token, logout, navigate]);
+  // Get user's full name
+  const getFullName = () => {
+    if (userData.firstName && userData.lastName) {
+      return `${userData.firstName} ${userData.lastName}`;
+    } else if (userData.firstName) {
+      return userData.firstName;
+    } else if (userData.username) {
+      return userData.username;
+    }
+    return "Sathyajith Wickramasingha"; // Default fallback
+  };
+
+  // Get user's initials for avatar
+  const getInitials = () => {
+    if (userData.firstName && userData.lastName) {
+      return `${userData.firstName.charAt(0)}${userData.lastName.charAt(0)}`;
+    } else if (userData.firstName) {
+      return userData.firstName.charAt(0);
+    } else if (userData.username) {
+      return userData.username.charAt(0);
+    }
+    return "SW"; // Default fallback
+  };
 
   const handleExamChange = (e) => {
     const { name, value } = e.target;
@@ -90,88 +190,169 @@ const Profile = () => {
 
   const handleExamSubmit = async () => {
     try {
-      const response = await axios.put(
-        '/api/auth/update-exam-date',
-        examData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      if (response.data.success) {
-        setUserData(prev => ({
-          ...prev,
-          examName: examData.examName,
-          examDate: examData.examDate
-        }));
-        
-        setShowSuccessMessage(true);
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-        }, 3000);
-        
-        setIsEditing(false);
+      // Validate inputs
+      if (!examData.examName.trim() || !examData.examDate) {
+        setError('Please fill in all exam details');
+        setTimeout(() => setError(null), 3000);
+        return;
       }
+
+      // Save to localStorage first
+      const examObj = {
+        id: Date.now(),
+        examName: examData.examName,
+        examDate: examData.examDate
+      };
+      localStorage.setItem('userExams', JSON.stringify([examObj]));
+
+      // Also try to save to API
+      try {
+        const response = await axios.put(
+          '/api/auth/update-exam-date',
+          examData,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        if (response.data.success) {
+          console.log('Exam updated in API successfully');
+        }
+      } catch (apiError) {
+        console.error('API error (but continuing with localStorage):', apiError);
+      }
+
+      // Update local state regardless of API success
+      setUserData(prev => ({
+        ...prev,
+        examName: examData.examName,
+        examDate: examData.examDate
+      }));
+      
+      setSuccessMessage('Exam details updated successfully!');
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+      
+      setIsEditing(false);
     } catch (error) {
       console.error('Error updating exam details:', error);
-      setError('Failed to update exam details');
+      setError('Failed to update exam details. Please try again.');
       setTimeout(() => {
         setError(null);
       }, 3000);
     }
   };
 
-  const handleRemoveExam = async () => {
+  const handleRemoveExam = () => {
     try {
-      const response = await axios.delete(
-        '/api/auth/remove-exam',
-        {
+      // Remove from localStorage
+      localStorage.removeItem('userExams');
+      
+      // Try to remove from API too
+      try {
+        axios.delete('/api/auth/remove-exam', {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      if (response.data.success) {
-        setUserData(prev => ({
-          ...prev,
-          examName: '',
-          examDate: null
-        }));
-        
-        setExamData({
-          examName: '',
-          examDate: ''
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          data: {}
         });
-        
-        setShowSuccessMessage(true);
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-        }, 3000);
+      } catch (apiError) {
+        console.error('API removal error (but continuing):', apiError);
       }
+
+      // Update local state regardless of API success
+      setUserData(prev => ({
+        ...prev,
+        examName: '',
+        examDate: null
+      }));
+      
+      setExamData({
+        examName: '',
+        examDate: ''
+      });
+      
+      setSuccessMessage('Exam removed successfully!');
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+      
+      setIsEditing(false);
     } catch (error) {
       console.error('Error removing exam details:', error);
       setError('Failed to remove exam details. Please try again.');
       setTimeout(() => {
         setError(null);
       }, 3000);
-    } finally {
-      setIsEditing(false);
     }
   };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // Calculate remaining time until exam
+  const calculateTimeRemaining = () => {
+    if (!userData.examDate) return { days: 19, hours: 6, minutes: 38, seconds: 58 };
+    
+    try {
+      const examTime = new Date(userData.examDate).getTime();
+      const now = new Date().getTime();
+      const difference = examTime - now;
+      
+      if (difference <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+      
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      
+      return { days, hours, minutes, seconds };
+    } catch (error) {
+      console.error('Error calculating time remaining:', error);
+      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    }
+  };
+  
+  // Add useEffect to update the timer every second
+  useEffect(() => {
+    // Initial calculation
+    setTimeLeft(calculateTimeRemaining());
+    
+    // Set up interval to update every second
+    const timerInterval = setInterval(() => {
+      setTimeLeft(calculateTimeRemaining());
+    }, 1000);
+    
+    // Clean up on component unmount
+    return () => clearInterval(timerInterval);
+  }, [userData.examDate]); // Recalculate when exam date changes
 
   if (loading) {
     return <div className="loading">Loading profile...</div>;
   }
 
+  // Check if we have exam data to display
+  const hasExamData = userData.examName || userData.examDate;
+  
+  // For debugging - show what we have in state
+  console.log('Current userData state:', userData);
+  console.log('Current examData state:', examData);
+  console.log('hasExamData:', hasExamData);
+
   return (
-    <div className="main-container">
+    <div className="profile-page-container">
       {showSuccessMessage && (
         <div className="alert alert-success position-fixed top-0 start-50 translate-middle-x mt-4" style={{ zIndex: 1050 }}>
-          {userData?.examDate ? 'Exam details updated successfully!' : 'Exam removed successfully!'}
+          {successMessage}
         </div>
       )}
       
@@ -181,163 +362,190 @@ const Profile = () => {
         </div>
       )}
       
-      <div className="two-column-layout">
+      <div className="profile-layout">
         {/* Left column - Profile */}
-        <div className="profile-column">
-          <div className="profile-card">
-            <h2>User Profile</h2>
-            <div className="profile-details">
-              <div className="detail-item">
-                <label>Username:</label>
-                <p>{userData.username}</p>
-              </div>
-              <div className="detail-item">
-                <label>Email:</label>
-                <p>{userData.email}</p>
-              </div>
-              
-              {/* Exam Details Section */}
-              <div className="detail-item exam-details">
-                <div className="exam-header">
-                  <h4>Exam Details</h4>
-                  {userData?.examDate && !isEditing && (
-                    <div className="exam-actions">
-                      <button 
-                        onClick={() => setIsEditing(true)} 
-                        className="edit-button"
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={handleRemoveExam} 
-                        className="remove-button"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  )}
+        <div className="profile-left-column">
+          <div className="profile-user-info">
+            <div className="profile-avatar-container">
+              {userData.profilePicture ? (
+                <img 
+                  src={userData.profilePicture} 
+                  alt={getFullName()} 
+                  className="profile-avatar" 
+                />
+              ) : (
+                <div className="profile-avatar profile-avatar-initials">
+                  {getInitials()}
                 </div>
-                
-                {isEditing ? (
-                  <div className="exam-form">
-                    <div className="form-group">
-                      <label>Exam Name:</label>
-                      <input
-                        type="text"
-                        name="examName"
-                        value={examData.examName}
-                        onChange={handleExamChange}
-                        required
-                      />
+              )}
+            </div>
+            <h3 className="profile-username">{getFullName()}</h3>
+            <p className="profile-email">{userData.email || "user@example.com"}</p>
+            
+            <div className="countdown-container">
+              <h4 className="countdown-title">Time Until {userData.examName || "Advanced Level"}</h4>
+              <div className="countdown-timer">
+                <div className="countdown-block">
+                  <div className="countdown-value">{timeLeft.days}</div>
+                  <div className="countdown-label">Days</div>
+                </div>
+                <div className="countdown-block">
+                  <div className="countdown-value">{timeLeft.hours}</div>
+                  <div className="countdown-label">Hours</div>
+                </div>
+                <div className="countdown-block">
+                  <div className="countdown-value">{timeLeft.minutes}</div>
+                  <div className="countdown-label">Minutes</div>
+                </div>
+                <div className="countdown-block">
+                  <div className="countdown-value">{timeLeft.seconds}</div>
+                  <div className="countdown-label">Seconds</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Exam Details Section */}
+            {isEditing ? (
+              <div className="exam-edit-form">
+                <h4>Edit Exam Details</h4>
+                <div className="form-group">
+                  <label>Exam Name:</label>
+                  <input
+                    type="text"
+                    name="examName"
+                    value={examData.examName}
+                    onChange={handleExamChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Exam Date:</label>
+                  <input
+                    type="date"
+                    name="examDate"
+                    value={examData.examDate}
+                    onChange={handleExamChange}
+                    required
+                  />
+                </div>
+                <div className="form-actions">
+                  <button 
+                    onClick={handleExamSubmit} 
+                    className="save-button"
+                  >
+                    Save
+                  </button>
+                  <button 
+                    onClick={() => setIsEditing(false)} 
+                    className="cancel-button"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="exam-details-box">
+                <h4 className="exam-details-title">Exam Details</h4>
+                {hasExamData ? (
+                  <>
+                    <div className="exam-details-content">
+                      <div className="exam-detail-row">
+                        <span className="exam-detail-label">Exam :</span>
+                        <span className="exam-detail-value">{userData.examName || "Advanced level exam"}</span>
+                      </div>
+                      <div className="exam-detail-row">
+                        <span className="exam-detail-label">Exam Date:</span>
+                        <span className="exam-detail-value">
+                          {userData.examDate ? new Date(userData.examDate).toLocaleDateString() : "2025/03/12"}
+                        </span>
+                      </div>
                     </div>
-                    <div className="form-group">
-                      <label>Exam Date:</label>
-                      <input
-                        type="date"
-                        name="examDate"
-                        value={examData.examDate}
-                        onChange={handleExamChange}
-                        required
-                      />
+                    <div className="exam-actions-row">
+                      <button className="exam-edit-btn" onClick={() => setIsEditing(true)}>Edit</button>
+                      <button className="exam-remove-btn" onClick={handleRemoveExam}>Remove</button>
                     </div>
-                    <div className="form-actions">
-                      <button 
-                        onClick={handleExamSubmit} 
-                        className="save-button"
-                      >
-                        Save
-                      </button>
-                      <button 
-                        onClick={() => setIsEditing(false)} 
-                        className="cancel-button"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : userData.examDate ? (
-                  <div className="exam-display">
-                    <div className="exam-info">
-                      <label>Exam Name:</label>
-                      <p>{userData.examName}</p>
-                    </div>
-                    <div className="exam-info">
-                      <label>Exam Date:</label>
-                      <p>{new Date(userData.examDate).toLocaleDateString()}</p>
-                    </div>
-                    
-                    {/* Countdown Component */}
-                    <ExamCountdown 
-                      examDate={userData.examDate}
-                      examName={userData.examName}
-                    />
-                  </div>
+                  </>
                 ) : (
-                  <div className="no-exam">
-                    <p>No exam scheduled.</p>
-                    <button 
-                      onClick={() => setIsEditing(true)} 
-                      className="add-button"
-                    >
-                      Add Exam
-                    </button>
+                  <div className="no-exam-data">
+                    <p>No exam details set yet.</p>
+                    <button className="exam-edit-btn" onClick={() => setIsEditing(true)}>Add Exam Details</button>
                   </div>
                 )}
               </div>
+            )}
+            
+            {/* Logout button */}
+            <div className="logout-container">
+              <button className="logout-button" onClick={handleLogout}>
+                <FaSignOutAlt /> Logout
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Right column - Groups */}
-        <div className="groups-column">
-          <div className="joined-section">
-            <h3>Joined Groups</h3>
-            <div className="row">
-              {userData?.joinedGroups?.length > 0 ? (
-                userData.joinedGroups.map(group => (
-                  <div className="col-12 mb-3" key={group._id}>
-                    <div className="card">
-                      <div className="card-body">
-                        <h5 className="card-title">{group.name}</h5>
-                        <p className="card-text">{group.description}</p>
-                        <p className="card-text">
-                          <small className="text-muted">Category: {group.category}</small>
-                        </p>
-                      </div>
-                    </div>
+        {/* Right column - Study Groups */}
+        <div className="profile-right-column">
+          {/* MOVED: My Study Groups Section - now at the top of right column */}
+          <div className="my-study-groups-box">
+            <h4 className="study-groups-title">
+              <FaUserFriends style={{marginRight: '8px'}} /> 
+              My Study Groups
+            </h4>
+            
+            {myStudyGroups.length > 0 ? (
+              <div className="study-groups-list">
+                {myStudyGroups.map(group => (
+                  <div key={group.id} className="study-group-item">
+                    <button 
+                      className="study-group-btn" 
+                      onClick={() => handleStudyGroupClick(group.subject)}
+                    >
+                      {group.examName}
+                    </button>
+                    <button 
+                      className="remove-group-btn" 
+                      onClick={() => handleRemoveStudyGroup(group.id)}
+                      aria-label="Remove group"
+                    >
+                      ✕
+                    </button>
                   </div>
-                ))
-              ) : (
-                <div className="col-12">
-                  <p>You haven't joined any groups yet.</p>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-groups-message">
+                <p>You haven't added any study groups yet.</p>
+                <button 
+                  className="browse-groups-btn"
+                  onClick={() => navigate('/join-group')}
+                >
+                  Browse Study Groups
+                </button>
+              </div>
+            )}
           </div>
-
-          <div className="favourite-section">
-            <h3>Favourite Groups</h3>
-            <div className="row">
-              {userData?.favouriteGroups?.length > 0 ? (
-                userData.favouriteGroups.map(group => (
-                  <div className="col-12 mb-3" key={group._id}>
-                    <div className="card">
-                      <div className="card-body">
-                        <h5 className="card-title">{group.name}</h5>
-                        <p className="card-text">{group.description}</p>
-                        <p className="card-text">
-                          <small className="text-muted">Category: {group.category}</small>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="col-12">
-                  <p>You haven't added any groups to your favorites yet.</p>
+          
+          <h2 className="study-groups-title">Study Groups</h2>
+          
+          <div className="quiz-results-container">
+            {quizData.map((quiz, index) => (
+              <div className="quiz-result-card" key={index}>
+                <div className="quiz-info">
+                  <div className="quiz-level">{quiz.level}</div>
+                  <div className="quiz-subject">{quiz.subject}</div>
                 </div>
-              )}
-            </div>
+                <div className="quiz-stats">
+                  <div className="quiz-attempted">Attempted Quiz : {quiz.attempted}</div>
+                  <div className="quiz-average">Average: {quiz.average}</div>
+                  <div className="quiz-progress-bar">
+                    <div 
+                      className="quiz-progress-fill" 
+                      style={{ width: quiz.average }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -29,23 +29,31 @@
 
 .profile-header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-header h2 {
+  margin: 0;
 }
 
 .profile-avatar {
-  width: 80px;
-  height: 80px;
-  background-color: #007bff;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
+  border: 1px solid #ddd;
+  object-fit: cover; /* For profile images */
+}
+
+.profile-avatar-initials {
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  background-color: #007bff;
   color: white;
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: bold;
-  margin-bottom: 1rem;
 }
 
 .profile-header h3 {
@@ -80,21 +88,36 @@
   border-bottom: 1px solid #eee;
 }
 
-.logout-button {
+.logout-container {
   width: 100%;
-  padding: 12px;
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background-color: #000;
   color: white;
   border: none;
-  border-radius: 5px;
-  font-size: 1rem;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-top: 2rem;
+  transition: background-color 0.3s;
+  width: 100%;
+  max-width: 200px;
 }
 
 .logout-button:hover {
   background-color: #333;
+}
+
+.logout-button svg {
+  font-size: 1.1rem;
 }
 
 .profile-loading {
@@ -547,4 +570,520 @@
   height: 100vh;
   font-size: 1.2rem;
   color: #666;
+}
+
+.profile-page-container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.profile-layout {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: white;
+}
+
+/* Left Column Styles */
+.profile-left-column {
+  flex: 1;
+  padding: 30px;
+  border-right: 1px solid #eee;
+  max-width: 400px;
+}
+
+.profile-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-avatar-container {
+  margin-bottom: 20px;
+}
+
+.profile-username {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+.profile-email {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.countdown-container {
+  width: 100%;
+  margin-bottom: 30px;
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.countdown-title {
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.countdown-timer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.countdown-block {
+  text-align: center;
+}
+
+.countdown-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.countdown-label {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+.exam-details-box {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.exam-details-title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.exam-details-content {
+  margin-bottom: 20px;
+}
+
+.exam-detail-row {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.exam-detail-label {
+  font-weight: 500;
+  margin-right: 10px;
+}
+
+.exam-detail-value {
+  color: #333;
+}
+
+.exam-actions-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.exam-edit-btn, .exam-remove-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.exam-edit-btn {
+  background-color: #333;
+  color: white;
+}
+
+.exam-remove-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Right Column Styles */
+.profile-right-column {
+  flex: 2;
+  padding: 30px;
+}
+
+.study-groups-title {
+  font-size: 1.8rem;
+  margin-bottom: 30px;
+  font-weight: 600;
+}
+
+.quiz-results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.quiz-result-card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.quiz-info {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.quiz-level {
+  background-color: #000;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.quiz-subject {
+  background-color: #000;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+.quiz-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.quiz-attempted, .quiz-average {
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.quiz-progress-bar {
+  width: 100%;
+  height: 20px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.quiz-progress-fill {
+  height: 100%;
+  background-color: #000;
+  border-radius: 10px;
+}
+
+/* Responsive styles */
+@media (max-width: 992px) {
+  .profile-layout {
+    flex-direction: column;
+  }
+  
+  .profile-left-column {
+    max-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+  }
+}
+
+@media (max-width: 576px) {
+  .countdown-timer {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .countdown-block {
+    flex: 1;
+    min-width: 70px;
+  }
+  
+  .exam-actions-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .exam-edit-btn, .exam-remove-btn {
+    width: 100%;
+  }
+}
+
+/* Modal styles for editing */
+.edit-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.edit-modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.edit-modal-title {
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.edit-form-group {
+  margin-bottom: 20px;
+}
+
+.edit-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.edit-form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.edit-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.save-btn, .cancel-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.save-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.cancel-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Add these styles to your Profile.css file */
+
+.exam-edit-form {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.exam-edit-form h4 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.save-button, .cancel-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.save-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #218838;
+}
+
+.cancel-button {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #5a6268;
+}
+
+.alert {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 15px 20px;
+  border-radius: 4px;
+  z-index: 1050;
+  font-weight: 500;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.alert-success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+/* Add these styles to your Profile.css file */
+
+.no-exam-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 0;
+}
+
+.no-exam-data p {
+  color: #666;
+  font-style: italic;
+  margin: 0;
+}
+
+.no-exam-data .exam-edit-btn {
+  width: 100%;
+  max-width: 200px;
+}
+
+/* My Study Groups styles */
+.my-study-groups-box {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  background-color: white;
+}
+
+.my-study-groups-box h4 {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.study-groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.study-group-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.study-group-btn {
+  flex-grow: 1;
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.study-group-btn:hover {
+  background-color: #333;
+}
+
+.remove-group-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.remove-group-btn:hover {
+  background-color: #c82333;
+}
+
+.no-groups-message {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.no-groups-message p {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.browse-groups-btn {
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.browse-groups-btn:hover {
+  background-color: #333;
 } 

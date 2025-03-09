@@ -1,21 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './JoinGroup.css';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 function JoinGroup() {
+  const { token, user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  
+  // Add useEffect to check auth status
+  useEffect(() => {
+    console.log('Auth Status:', { token, user });
+  }, [token, user]);
+
+  // Define categories here
+  const categories = [
+    { id: 'all', name: 'All Groups' },
+    { id: 'advanced', name: 'Advanced Level' },
+    { id: 'ordinary', name: 'Ordinary Level' },
+    { id: 'university', name: 'University' },
+    { id: 'london-al', name: 'London A/L' },
+    { id: 'london-ol', name: 'London O/L' }
+  ];
   
   // Mock data for study groups - replace with actual API data later
   const studyGroups = [
     { id: 1, name: "Physics Study Group", level: "advanced", subject: "Physics", members: 5, maxMembers: 10 },
     { id: 2, name: "Combined Mathematics Study Group", level: "advanced", subject: "Combined Mathematics", members: 5, maxMembers: 10 },
-    
     { id: 4, name: "Chemistry Study Group", level: "advanced", subject: "Chemistry", members: 5, maxMembers: 10 },
     { id: 5, name: "Biology Study Group", level: "advanced", subject: "Biology", members: 5, maxMembers: 10 },
     { id: 6, name: "Chemistry Study Group", level: "advanced", subject: "Chemistry", members: 5, maxMembers: 10 },
-   
     { id: 8, name: "Agricultural Science Study Group", level: "advanced", subject: "Agricultural Science", members: 5, maxMembers: 10 },
     { id: 9, name: "Business Studies Study Group", level: "advanced", subject: "Business Studies", members: 5, maxMembers: 10 },
     { id: 10, name: "Accounting Study Group", level: "advanced", subject: "Accounting", members: 5, maxMembers: 10 },
@@ -62,15 +81,6 @@ function JoinGroup() {
     { id: 51, name: "Mathematics", level: "london-ol", subject: "Math", members: 7, maxMembers: 15 }
   ];
 
-  const categories = [
-    { id: 'all', name: 'All Groups' },
-    { id: 'advanced', name: 'Advanced Level' },
-    { id: 'ordinary', name: 'Ordinary Level' },
-    { id: 'university', name: 'University' },
-    { id: 'london-al', name: 'London A/L' },
-    { id: 'london-ol', name: 'London O/L' }
-  ];
-
   const filteredGroups = studyGroups
     .filter(group => selectedCategory === 'all' || group.level === selectedCategory)
     .filter(group => 
@@ -88,10 +98,103 @@ function JoinGroup() {
     navigate(routes[subject] || '/join-group');
   };
 
+  const handleAddToProfile = (e, group) => {
+    e.stopPropagation(); // Prevent triggering the card's onClick
+    
+    if (!token) {
+      alert('Please log in to add groups to your profile');
+      navigate('/login');
+      return;
+    }
+    
+    setSelectedGroup(group);
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmAdd = async () => {
+    try {
+      if (!selectedGroup) return;
+      
+      setIsLoading(true);
+
+      // Format the group name by combining level and subject
+      const levelName = categories.find(cat => cat.id === selectedGroup.level)?.name || '';
+      const groupName = `${levelName} ${selectedGroup.subject}`;
+
+      // Create the group object
+      const groupObj = {
+        id: selectedGroup.id,
+        examName: groupName, // We use examName for consistency
+        subject: selectedGroup.subject,
+        level: selectedGroup.level
+      };
+      
+      // Add to "myStudyGroups" in localStorage
+      let myGroups = JSON.parse(localStorage.getItem('myStudyGroups') || '[]');
+      
+      // Check if group already exists
+      const groupExists = myGroups.some(g => g.id === groupObj.id);
+      if (!groupExists) {
+        myGroups.push(groupObj);
+        localStorage.setItem('myStudyGroups', JSON.stringify(myGroups));
+        
+        // Show success message
+        alert(`${groupName} has been added to your profile`);
+        
+        // Navigate to profile or reload if already there
+        if (window.location.pathname === '/profile') {
+          window.location.reload();
+        } else {
+          navigate('/profile');
+        }
+      } else {
+        alert('This group is already in your profile');
+      }
+    } catch (error) {
+      console.error('Error adding group to profile:', error);
+      alert('Failed to add group to profile. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setShowConfirmation(false);
+      setSelectedGroup(null);
+    }
+  };
+
   return (
     <div className="join-group-container">
       <h1>Join a Study Group</h1>
       
+      {/* Confirmation Popup */}
+      {showConfirmation && selectedGroup && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <p>Do you want to add this group to your profile?</p>
+            <p className="exam-name-preview">
+              {`${categories.find(cat => cat.id === selectedGroup.level)?.name} ${selectedGroup.subject}`}
+            </p>
+            <div className="popup-buttons">
+              <button 
+                onClick={handleConfirmAdd} 
+                className="popup-btn confirm-btn"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Adding...' : 'Yes'}
+              </button>
+              <button 
+                onClick={() => {
+                  setShowConfirmation(false);
+                  setSelectedGroup(null);
+                }} 
+                className="popup-btn cancel-btn"
+                disabled={isLoading}
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="search-and-filter">
         <input
           type="text"
@@ -124,7 +227,13 @@ function JoinGroup() {
                 <p><strong>Members:</strong> {group.members}/{group.maxMembers}</p>
                 <p className="level-tag">{categories.find(cat => cat.id === group.level)?.name}</p>
               </div>
-              <button className="join-btn">Join Group</button>
+              <button className="join-btn">Enter Group</button>
+              <button 
+                className="add-to-profile-btn"
+                onClick={(e) => handleAddToProfile(e, group)}
+              >
+                Add to profile
+              </button>
             </div>
           ))
         ) : (
