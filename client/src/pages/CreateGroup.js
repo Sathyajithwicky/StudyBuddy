@@ -19,13 +19,18 @@ function CreateGroup() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState('success');
+  const [groupCreated, setGroupCreated] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       // Validate input
       if (!groupData.name.trim() || !groupData.description.trim() || !groupData.category.trim()) {
-        alert('Please fill in all fields');
+        setAlertMessage('Please fill in all fields');
+        setAlertType('danger');
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 3000);
         return;
       }
 
@@ -38,11 +43,15 @@ function CreateGroup() {
 
       if (response.data.success) {
         setCreatedGroupId(response.data.group._id);
+        setGroupCreated(true);
         setShowModal(true);
       }
     } catch (error) {
       console.error('Error creating group:', error);
-      alert('Failed to create group. Please try again.');
+      setAlertMessage('Failed to create group. Please try again.');
+      setAlertType('danger');
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
     }
   };
 
@@ -62,6 +71,7 @@ function CreateGroup() {
         setShowModal(false);
         
         if (addToProfile) {
+          // Add group to joined groups
           const groupShortcut = {
             _id: createdGroupId,
             name: groupData.name,
@@ -77,26 +87,32 @@ function CreateGroup() {
             }
           });
 
-          // Show Bootstrap alert
           setAlertMessage(`${groupData.name} has been added to your profile!`);
+          setAlertType('success');
           setShowAlert(true);
           
           // Navigate after delay
           setTimeout(() => {
-            navigate('/profile?refresh=' + Date.now());
+            setShowAlert(false);
+            navigate('/');
           }, 3000);
         } else {
           setAlertMessage(`You have joined ${groupData.name}`);
+          setAlertType('success');
           setShowAlert(true);
+          
           setTimeout(() => {
-            navigate('/study-groups');
+            setShowAlert(false);
+            navigate('/');
           }, 3000);
         }
       }
     } catch (joinError) {
       console.error('Error joining group:', joinError);
       setAlertMessage('Failed to join group. Please try again.');
+      setAlertType('danger');
       setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
     }
   };
 
@@ -108,6 +124,14 @@ function CreateGroup() {
   };
 
   const handleFavoriteClick = async (groupId) => {
+    if (!groupId) {
+      setAlertMessage('Please create a group first');
+      setAlertType('warning');
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
+      return;
+    }
+    
     try {
       const response = await axios.post(`/api/groups/${groupId}/favorite`, 
         { isFavorite: !isFavorite },
@@ -121,11 +145,17 @@ function CreateGroup() {
 
       if (response.data.success) {
         setIsFavorite(!isFavorite);
-        alert(isFavorite ? 'Removed from favorites' : 'Added to favorites!');
+        setAlertMessage(isFavorite ? 'Removed from favorites' : 'Added to favorites!');
+        setAlertType('success');
+        setShowAlert(true);
+        setTimeout(() => setShowAlert(false), 3000);
       }
     } catch (error) {
       console.error('Error updating favorite status:', error);
-      alert('Failed to update favorite status. Please try again.');
+      setAlertMessage('Failed to update favorite status. Please try again.');
+      setAlertType('danger');
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
     }
   };
 
@@ -140,7 +170,7 @@ function CreateGroup() {
     <div className="container mt-5">
       {showAlert && (
         <div 
-          className="alert alert-success alert-dismissible fade show" 
+          className={`alert alert-${alertType} alert-dismissible fade show`}
           role="alert"
           style={{
             position: 'fixed',
@@ -219,20 +249,24 @@ function CreateGroup() {
         </Modal.Footer>
       </Modal>
 
-      <div className="card">
-        <div className="card-body">
-          <div className="d-flex justify-content-between align-items-center">
-            <h5 className="card-title">{groupData.name}</h5>
-            <button 
-              className={`favorite-btn ${isFavorite ? 'active' : ''}`}
-              onClick={() => handleFavoriteClick(createdGroupId)}
-            >
-              <FaStar className={isFavorite ? 'filled' : ''} />
-            </button>
+      {/* Only show the card if a group has been created */}
+      {groupCreated && (
+        <div className="card mt-4">
+          <div className="card-body">
+            <div className="d-flex justify-content-between align-items-center">
+              <h5 className="card-title">{groupData.name}</h5>
+              <button 
+                className={`favorite-btn ${isFavorite ? 'active' : ''}`}
+                onClick={() => handleFavoriteClick(createdGroupId)}
+              >
+                <FaStar className={isFavorite ? 'filled' : ''} />
+              </button>
+            </div>
+            <p className="card-text">{groupData.description}</p>
+            <p className="card-text"><small className="text-muted">Category: {groupData.category}</small></p>
           </div>
-          {/* ... rest of your card content ... */}
         </div>
-      </div>
+      )}
     </div>
   );
 }

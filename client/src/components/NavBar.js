@@ -51,14 +51,14 @@ function NavBar() {
               <Link to="/profile">
                 <img 
                   src={defaultProfile} 
-                  alt={`${user?.firstName}'s Profile`} 
+                  alt="Profile" 
                   className="profile-image" 
                 />
               </Link>
               <Link 
                 to="/reviews" 
                 className="review-button"
-                title="View my reviews"
+                title="View my feedback"
               >
                 <FaComments /> Reviews
               </Link>
