@@ -93,96 +93,100 @@ const Feedback = () => {
         <p className="feedback-subtitle">Help us improve your experience</p>
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Name</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required={!formData.isAnonymous}
-            />
-          </div>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Name</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required={!formData.isAnonymous}
+              />
+            </div>
 
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required={!formData.isAnonymous}
-            />
-          </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required={!formData.isAnonymous}
+              />
+            </div>
 
-          <div className="form-group">
-            <label>Feedback Type</label>
-            <select
-              name="feedbackType"
-              value={formData.feedbackType}
-              onChange={handleChange}
-              required
-            >
-              <option value="General">General Feedback</option>
-              <option value="Bug Report">Bug Report</option>
-              <option value="Feature Request">Feature Request</option>
-              <option value="Study Group Feedback">Study Group Feedback</option>
-            </select>
-          </div>
+            <div className="form-group">
+              <label>Feedback Type</label>
+              <select
+                name="feedbackType"
+                value={formData.feedbackType}
+                onChange={handleChange}
+                required
+              >
+                <option value="General">General Feedback</option>
+                <option value="Bug Report">Bug Report</option>
+                <option value="Feature Request">Feature Request</option>
+                <option value="Study Group Feedback">Study Group Feedback</option>
+              </select>
+            </div>
 
-          <div className="form-group">
-            <label>Rating</label>
-            <div className="star-rating">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span
-                  key={star}
-                  className={`star ${star <= formData.rating ? 'selected' : ''}`}
-                  onClick={() => setFormData({ ...formData, rating: star })}
-                >
-                  ★
-                </span>
-              ))}
+            <div className="form-group">
+              <label>Rating</label>
+              <div className="star-rating">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span
+                    key={star}
+                    className={`star ${star <= formData.rating ? 'selected' : ''}`}
+                    onClick={() => setFormData({ ...formData, rating: star })}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="form-group full-width">
+              <label>Your Message</label>
+              <textarea
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                required
+                rows="4"
+                placeholder="Please share your thoughts..."
+              />
+            </div>
+
+            <div className="form-group full-width">
+              <label>Suggestions for Improvement</label>
+              <textarea
+                name="suggestions"
+                value={formData.suggestions}
+                onChange={handleChange}
+                rows="3"
+                placeholder="How can we make your experience better?"
+              />
+            </div>
+
+            <div className="form-group checkbox-group full-width">
+              <label>
+                <input
+                  type="checkbox"
+                  name="isAnonymous"
+                  checked={formData.isAnonymous}
+                  onChange={handleChange}
+                />
+                Submit Anonymously
+              </label>
+            </div>
+
+            <div className="form-group full-width">
+              <button type="submit" className="submit-button">
+                Submit Feedback
+              </button>
             </div>
           </div>
-
-          <div className="form-group">
-            <label>Your Message</label>
-            <textarea
-              name="message"
-              value={formData.message}
-              onChange={handleChange}
-              required
-              rows="4"
-              placeholder="Please share your thoughts..."
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Suggestions for Improvement</label>
-            <textarea
-              name="suggestions"
-              value={formData.suggestions}
-              onChange={handleChange}
-              rows="3"
-              placeholder="How can we make your experience better?"
-            />
-          </div>
-
-          <div className="form-group checkbox-group">
-            <label>
-              <input
-                type="checkbox"
-                name="isAnonymous"
-                checked={formData.isAnonymous}
-                onChange={handleChange}
-              />
-              Submit Anonymously
-            </label>
-          </div>
-
-          <button type="submit" className="submit-button">
-            Submit Feedback
-          </button>
         </form>
       </div>
     </div>

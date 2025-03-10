@@ -50,7 +50,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #007bff;
+  background-color: #000000;
   color: white;
   font-size: 2rem;
   font-weight: bold;
@@ -1040,11 +1040,11 @@
 }
 
 .study-group-btn:hover {
-  color: #007bff;
+  color: #000000;
 }
 
 .enter-group-btn {
-  background-color: #007bff;
+  background-color: #000000;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -1054,7 +1054,7 @@
 }
 
 .enter-group-btn:hover {
-  background-color: #0056b3;
+  background-color: #3f3f3f;
 }
 
 .remove-group-btn {

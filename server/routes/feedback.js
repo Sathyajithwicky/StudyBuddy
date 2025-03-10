@@ -3,6 +3,44 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Feedback = require('../models/Feedback');
 
+// Get all feedback
+router.get('/', async (req, res) => {
+  try {
+    const feedback = await Feedback.find()
+      .sort({ createdAt: -1 }); // Sort by newest first
+
+    res.json({
+      success: true,
+      feedback
+    });
+  } catch (error) {
+    console.error('Error fetching all feedback:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching feedback'
+    });
+  }
+});
+
+// Alternative endpoint for getting all feedback
+router.get('/all', async (req, res) => {
+  try {
+    const feedback = await Feedback.find()
+      .sort({ createdAt: -1 }); // Sort by newest first
+
+    res.json({
+      success: true,
+      feedback
+    });
+  } catch (error) {
+    console.error('Error fetching all feedback:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching feedback'
+    });
+  }
+});
+
 router.post('/submit', auth, async (req, res) => {
   try {
     const feedback = new Feedback({
@@ -49,4 +87,4 @@ router.get('/my-feedback', auth, async (req, res) => {
   }
 });
 
-module.exports = router; 
+module.exports = router;
