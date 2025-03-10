@@ -13,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PhysicsGroup from './pages/PhysicsGroup';
 import ChemistryGroup from './pages/groups/ChemistryGroup';
 import BiologyGroup from './pages/groups/BiologyGroup';
+import CombinedMathsGroup from './pages/CombinedmathsGroup';
 import Reviews from './pages/Reviews';
 
 function App() {
@@ -61,6 +62,11 @@ function App() {
           <Route path="/biology-group" element={
             <ProtectedRoute>
               <BiologyGroup />
+            </ProtectedRoute>
+          } />
+          <Route path="/combinedmaths-group" element={
+            <ProtectedRoute>
+              <CombinedMathsGroup />
             </ProtectedRoute>
           } />
           <Route path="/reviews" element={

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './JoinGroup.css';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 function JoinGroup() {
@@ -92,6 +91,7 @@ function JoinGroup() {
       'Physics': '/physics-group',
       'Chemistry': '/chemistry-group',
       'Biology': '/biology-group',
+      'Combined Mathematics': '/combinedmaths-group'
       // Add more mappings for other subjects
     };
     

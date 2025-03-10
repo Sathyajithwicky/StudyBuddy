@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Profile.css';
 import { useAuth } from '../context/AuthContext';
-import { FaSignOutAlt, FaUser, FaUserFriends } from 'react-icons/fa';
+import { FaSignOutAlt, FaUserFriends } from 'react-icons/fa';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -83,6 +83,7 @@ const Profile = () => {
       'Physics': '/physics-group',
       'Chemistry': '/chemistry-group',
       'Biology': '/biology-group',
+      'Combined Mathematics': '/combinedmaths-group'
       // Add more mappings for other subjects
     };
     
@@ -496,19 +497,25 @@ const Profile = () => {
               <div className="study-groups-list">
                 {myStudyGroups.map(group => (
                   <div key={group.id} className="study-group-item">
-                    <button 
-                      className="study-group-btn" 
-                      onClick={() => handleStudyGroupClick(group.subject)}
-                    >
-                      {group.examName}
-                    </button>
-                    <button 
-                      className="remove-group-btn" 
-                      onClick={() => handleRemoveStudyGroup(group.id)}
-                      aria-label="Remove group"
-                    >
-                      ✕
-                    </button>
+                    <div>
+                      <div>Advanced Level</div>
+                      <div>{group.subject}</div>
+                    </div>
+                    <div>
+                      <button 
+                        className="enter-group-btn" 
+                        onClick={() => handleStudyGroupClick(group.subject)}
+                      >
+                        Enter
+                      </button>
+                      <button 
+                        className="remove-group-btn" 
+                        onClick={() => handleRemoveStudyGroup(group.id)}
+                        aria-label="Remove group"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -525,28 +532,6 @@ const Profile = () => {
             )}
           </div>
           
-          <h2 className="study-groups-title">Study Groups</h2>
-          
-          <div className="quiz-results-container">
-            {quizData.map((quiz, index) => (
-              <div className="quiz-result-card" key={index}>
-                <div className="quiz-info">
-                  <div className="quiz-level">{quiz.level}</div>
-                  <div className="quiz-subject">{quiz.subject}</div>
-                </div>
-                <div className="quiz-stats">
-                  <div className="quiz-attempted">Attempted Quiz : {quiz.attempted}</div>
-                  <div className="quiz-average">Average: {quiz.average}</div>
-                  <div className="quiz-progress-bar">
-                    <div 
-                      className="quiz-progress-fill" 
-                      style={{ width: quiz.average }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

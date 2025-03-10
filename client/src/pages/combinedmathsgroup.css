@@ -1,0 +1,141 @@
+.physics-group-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.group-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.group-header h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.feature-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.feature-card h2 {
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+/* Documents section */
+.docs-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.doc-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  color: #333;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.doc-link:hover {
+  background-color: #f5f5f5;
+}
+
+.doc-icon {
+  margin-right: 0.5rem;
+}
+
+/* Chat section */
+.chat-section {
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex-grow: 1;
+  background: #f5f5f5;
+  border-radius: 5px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  overflow-y: auto;
+}
+
+.chat-input {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chat-input input {
+  flex-grow: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.chat-input button {
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Video section */
+.videos-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.video-item {
+  cursor: pointer;
+}
+
+.video-thumbnail {
+  position: relative;
+  border-radius: 5px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+  background: #f0f0f0;
+  margin-bottom: 0.5rem;
+}
+
+.play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  opacity: 0.8;
+}
+
+.video-item h4 {
+  margin: 0;
+  color: #333;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .physics-group-container {
+    padding: 1rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+} 

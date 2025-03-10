@@ -998,65 +998,74 @@
 
 /* My Study Groups styles */
 .my-study-groups-box {
-  width: 100%;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 30px;
-  margin-bottom: 30px;
   background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-.my-study-groups-box h4 {
+.study-groups-title {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
-  font-weight: 600;
-  margin-bottom: 20px;
-  color: #333;
 }
 
 .study-groups-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1rem;
 }
 
 .study-group-item {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
 }
 
 .study-group-btn {
   flex-grow: 1;
-  background-color: #000;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 15px;
-  font-weight: 500;
   text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1rem;
+  color: #333;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: color 0.3s ease;
 }
 
 .study-group-btn:hover {
-  background-color: #333;
+  color: #007bff;
+}
+
+.enter-group-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.enter-group-btn:hover {
+  background-color: #0056b3;
 }
 
 .remove-group-btn {
   background-color: #dc3545;
   color: white;
   border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
 }
 
 .remove-group-btn:hover {
@@ -1065,25 +1074,22 @@
 
 .no-groups-message {
   text-align: center;
-  padding: 20px 0;
-}
-
-.no-groups-message p {
+  padding: 2rem;
   color: #666;
-  margin-bottom: 15px;
 }
 
 .browse-groups-btn {
-  background-color: #000;
+  display: inline-block;
+  background-color: #007bff;
   color: white;
+  padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
-  font-weight: 500;
+  border-radius: 4px;
+  margin-top: 1rem;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
 }
 
 .browse-groups-btn:hover {
-  background-color: #333;
-} 
+  background-color: #0056b3;
+}
