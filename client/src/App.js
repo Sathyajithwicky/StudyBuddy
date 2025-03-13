@@ -10,11 +10,13 @@ import SignUp from "./pages/SignUp";
 import Profile from "./pages/Profile";
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import PhysicsGroup from './pages/PhysicsGroup';
 import ChemistryGroup from './pages/groups/ChemistryGroup';
 import BiologyGroup from './pages/groups/BiologyGroup';
 import CombinedMathsGroup from './pages/CombinedmathsGroup';
 import Reviews from './pages/Reviews';
+import Admin from './pages/Admin';
 
 function App() {
   return (
@@ -27,6 +29,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<SignUp />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/admin" element={<Admin />} />
 
           {/* Protected routes */}
           <Route path="/pomodoro" element={
