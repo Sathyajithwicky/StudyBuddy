@@ -242,13 +242,13 @@ const Admin = () => {
           >
             <FaEdit />
           </button>
-          <button 
-            className="delete-btn" 
+                      <button 
+                        className="delete-btn"
             onClick={() => handleConfirmDelete(group)}
             title="Delete group"
-          >
+                      >
             <FaTrash />
-          </button>
+                      </button>
         </div>
       </div>
       <div className="group-card-body">
@@ -269,8 +269,8 @@ const Admin = () => {
       </div>
       <div className="group-card-footer">
         <button className="view-group-btn">View Details</button>
-      </div>
-    </div>
+                </div>
+              </div>
   );
 
   // Update the filter options to match the subjects
@@ -369,8 +369,8 @@ const Admin = () => {
           </button>
         </div>
       )}
-    </div>
-  );
+          </div>
+        );
 
   // Fetch feedback data when the feedback tab is selected
   useEffect(() => {
@@ -529,7 +529,7 @@ const Admin = () => {
       return <div className="empty-state">No feedback available yet.</div>;
     }
     
-    return (
+        return (
       <div className="feedback-list">
         <div className="feedback-summary">
           <div className="summary-box">
@@ -546,8 +546,8 @@ const Admin = () => {
           <div className="summary-box">
             <h4>Recent Feedback</h4>
             <p>{feedbacks.filter(f => new Date(f.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</p>
-          </div>
-        </div>
+                  </div>
+                </div>
         
         {feedbacks.map((feedback, index) => (
           <div key={feedback._id || index} className="feedback-item">
@@ -582,8 +582,8 @@ const Admin = () => {
             </div>
           </div>
         ))}
-      </div>
-    );
+          </div>
+        );
   };
 
   return (
@@ -592,8 +592,8 @@ const Admin = () => {
       <div className="admin-sidebar">
         <div className="admin-sidebar-header">
           <h2>Admin Panel</h2>
-        </div>
-        
+      </div>
+
         <div className="admin-sidebar-menu">
           <button 
             className={`admin-sidebar-item ${activeTab === 'dashboard' ? 'active' : ''}`}
@@ -601,7 +601,7 @@ const Admin = () => {
           >
             <FaChartLine /> Dashboard
           </button>
-          <button 
+          <button
             className={`admin-sidebar-item ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
           >
@@ -613,20 +613,20 @@ const Admin = () => {
           >
             <FaUserGraduate /> Study Groups
           </button>
-          <button 
+          <button
             className={`admin-sidebar-item ${activeTab === 'content' ? 'active' : ''}`}
             onClick={() => setActiveTab('content')}
           >
             <FaBookOpen /> Content
           </button>
-          <button 
+          <button
             className={`admin-sidebar-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
           >
             <FaCog /> Settings
           </button>
         </div>
-        
+
         <div className="admin-sidebar-footer">
           <button className="admin-logout-btn">
             <FaSignOutAlt /> Logout
@@ -635,7 +635,7 @@ const Admin = () => {
       </div>
       
       {/* Admin main content */}
-      <div className="admin-main">
+        <div className="admin-main">
         {/* Admin header */}
         <div className="admin-header">
           <div className="admin-header-title">
@@ -1126,4 +1126,4 @@ const Admin = () => {
   );
 };
 
-export default Admin; 
+export default Admin;
