@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './NavBar.css';
 import logo from '../assets/studybuddylogo.png';
 import { useAuth } from '../context/AuthContext';
 import defaultProfile from '../assets/default-profile.png';
-import { FaComments, FaUserShield, FaTimes, FaLock } from 'react-icons/fa';
+import { FaComments, FaUserShield, FaTimes, FaLock, FaBell } from 'react-icons/fa';
 
 function NavBar() {
   const location = useLocation();
@@ -15,6 +15,14 @@ function NavBar() {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [adminCredentials, setAdminCredentials] = useState({ username: '', password: '' });
   const [adminLoginError, setAdminLoginError] = useState('');
+  
+  // Add notification count state
+  const [notificationCount, setNotificationCount] = useState(3);
+  
+  // Log authentication status for debugging
+  useEffect(() => {
+    console.log("Auth status:", isAuthenticated);
+  }, [isAuthenticated]);
   
   // Handle admin login form input changes
   const handleAdminInputChange = (e) => {
@@ -86,6 +94,14 @@ function NavBar() {
             Study Groups
           </Link>
           <Link to="/feedback" className="nav-link">Feedback</Link>
+          
+          {/* Notification icon - make sure it's visible regardless of auth status for testing */}
+          <Link to="/notifications" className="nav-link notification-link">
+            <FaBell />
+            {notificationCount > 0 && (
+              <span className="notification-badge">{notificationCount}</span>
+            )}
+          </Link>
           
           <div className="auth-links">
             {!isAuthenticated ? (

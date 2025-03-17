@@ -17,6 +17,7 @@ import BiologyGroup from './pages/groups/BiologyGroup';
 import CombinedMathsGroup from './pages/CombinedmathsGroup';
 import Reviews from './pages/Reviews';
 import Admin from './pages/Admin';
+import Notifications from './pages/Notifications';
 
 function App() {
   return (
@@ -50,6 +51,11 @@ function App() {
           <Route path="/feedback" element={
             <ProtectedRoute>
               <Feedback />
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <Notifications />
             </ProtectedRoute>
           } />
           <Route path="/physics-group" element={
