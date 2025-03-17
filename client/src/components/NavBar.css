@@ -166,30 +166,7 @@ body {
   gap: 10px;
 }
 
-.review-button {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  background-color: #000;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  text-decoration: none;
-  transition: background-color 0.3s ease;
-  white-space: nowrap;
-}
 
-.review-button:hover {
-  background-color: #333;
-  color: white;
-  text-decoration: none;
-}
-
-.review-button svg {
-  font-size: 1.1rem;
-}
 
 .admin-link {
   display: flex;
