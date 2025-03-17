@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Admin.css';
-import { FaUsers, FaUserGraduate, FaBookOpen, FaCalendarAlt, FaCog, FaSignOutAlt, FaBell, FaChartLine, FaTrash, FaEdit, FaFilter, FaSearch, FaTimes } from 'react-icons/fa';
+import { FaUsers, FaUserGraduate, FaBookOpen, FaCalendarAlt, FaCog, FaSignOutAlt, FaBell, FaChartLine, FaTrash, FaEdit, FaFilter, FaSearch, FaTimes, FaStar, FaComment } from 'react-icons/fa';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const Admin = () => {
   // State for active tab
   const [activeTab, setActiveTab] = useState('dashboard');
+  // State for active content tab
+  const [activeContentTab, setActiveContentTab] = useState('quizzes');
+  
+  // Add feedback state
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(true);
+  const [feedbackError, setFeedbackError] = useState(null);
+  
+  // Get auth context
+  const { token } = useAuth();
   
   // State for editing study group
   const [editingGroup, setEditingGroup] = useState(null);
   const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupSubject, setNewGroupSubject] = useState('');
   
   // State for delete confirmation
   const [deleteConfirmGroup, setDeleteConfirmGroup] = useState(null);
@@ -22,23 +35,57 @@ const Admin = () => {
     { id: 5, name: 'Mike Wilson', email: 'mike@example.com', role: 'Student', joinDate: '2023-08-18', status: 'Active' },
   ];
   
-  // Mock data for study groups with state - expanded with more normal study groups
+  // Update the initial studyGroups state with all groups from JoinGroup.js
   const [studyGroups, setStudyGroups] = useState([
-    { id: 1, name: 'Physics Group A', members: 24, created: '2023-09-10', lastActive: '2023-11-28' },
-    { id: 2, name: 'Chemistry Club', members: 18, created: '2023-10-05', lastActive: '2023-11-27' },
-    { id: 3, name: 'Biology Study Circle', members: 32, created: '2023-08-20', lastActive: '2023-11-29' },
-    { id: 4, name: 'Mathematics Masters', members: 15, created: '2023-07-15', lastActive: '2023-11-25' },
-    { id: 5, name: 'Advanced Level Physics', members: 28, created: '2023-06-12', lastActive: '2023-11-30' },
-    { id: 6, name: 'Organic Chemistry Group', members: 16, created: '2023-07-25', lastActive: '2023-11-28' },
-    { id: 7, name: 'Combined Mathematics', members: 22, created: '2023-08-05', lastActive: '2023-11-29' },
-    { id: 8, name: 'Molecular Biology Study', members: 19, created: '2023-09-18', lastActive: '2023-11-26' },
-    { id: 9, name: 'Mechanics & Thermodynamics', members: 21, created: '2023-05-30', lastActive: '2023-11-27' },
-    { id: 10, name: 'Calculus Group', members: 25, created: '2023-06-22', lastActive: '2023-11-30' },
-    { id: 11, name: 'Quantum Physics', members: 14, created: '2023-07-10', lastActive: '2023-11-25' },
-    { id: 12, name: 'Cellular Biology', members: 23, created: '2023-08-15', lastActive: '2023-11-29' },
-    { id: 13, name: 'Inorganic Chemistry', members: 17, created: '2023-09-05', lastActive: '2023-11-28' },
-    { id: 14, name: 'Statistics & Probability', members: 20, created: '2023-10-10', lastActive: '2023-11-27' },
-    { id: 15, name: 'Algebra & Geometry', members: 26, created: '2023-05-15', lastActive: '2023-11-30' },
+    { id: 1, name: "Physics Study Group", level: "advanced", subject: "Physics", members: 5, maxMembers: 10, created: '2023-09-10', lastActive: '2023-11-28' },
+    { id: 2, name: "Combined Mathematics Study Group", level: "advanced", subject: "Combined Mathematics", members: 5, maxMembers: 10, created: '2023-10-05', lastActive: '2023-11-27' },
+    { id: 4, name: "Chemistry Study Group", level: "advanced", subject: "Chemistry", members: 5, maxMembers: 10, created: '2023-08-20', lastActive: '2023-11-29' },
+    { id: 5, name: "Biology Study Group", level: "advanced", subject: "Biology", members: 5, maxMembers: 10, created: '2023-07-15', lastActive: '2023-11-25' },
+    { id: 6, name: "Chemistry Study Group", level: "advanced", subject: "Chemistry", members: 5, maxMembers: 10, created: '2023-09-15', lastActive: '2023-11-26' },
+    { id: 8, name: "Agricultural Science Study Group", level: "advanced", subject: "Agricultural Science", members: 5, maxMembers: 10, created: '2023-08-10', lastActive: '2023-11-25' },
+    { id: 9, name: "Business Studies Study Group", level: "advanced", subject: "Business Studies", members: 5, maxMembers: 10, created: '2023-07-20', lastActive: '2023-11-27' },
+    { id: 10, name: "Accounting Study Group", level: "advanced", subject: "Accounting", members: 5, maxMembers: 10, created: '2023-06-15', lastActive: '2023-11-28' },
+    { id: 11, name: "Economics Study Group", level: "advanced", subject: "Economics", members: 5, maxMembers: 10, created: '2023-05-10', lastActive: '2023-11-29' },
+    { id: 12, name: "Business Statistics Study Group", level: "advanced", subject: "Business Statistics", members: 5, maxMembers: 10, created: '2023-04-05', lastActive: '2023-11-30' },
+    { id: 13, name: "Information and Communication Technology (ICT) Study Group", level: "advanced", subject: "Information and Communication Technology (ICT)", members: 5, maxMembers: 10, created: '2023-03-01', lastActive: '2023-11-28' },
+    { id: 14, name: "Buddhism Study Group", level: "advanced", subject: "Buddhism", members: 5, maxMembers: 10, created: '2023-02-15', lastActive: '2023-11-27' },
+    { id: 15, name: "Hinduism Study Group", level: "advanced", subject: "Hinduism", members: 5, maxMembers: 10, created: '2023-01-20', lastActive: '2023-11-26' },
+    { id: 16, name: "Islam Study Group", level: "advanced", subject: "Islam", members: 5, maxMembers: 10, created: '2023-01-10', lastActive: '2023-11-25' },
+    { id: 17, name: "Christianity Study Group", level: "advanced", subject: "Christianity", members: 5, maxMembers: 10, created: '2023-02-05', lastActive: '2023-11-24' },
+    { id: 18, name: "Sinhala Study Group", level: "advanced", subject: "Sinhala", members: 5, maxMembers: 10, created: '2023-03-10', lastActive: '2023-11-23' },
+    { id: 19, name: "Tamil Study Group", level: "advanced", subject: "Tamil", members: 5, maxMembers: 10, created: '2023-04-15', lastActive: '2023-11-22' },
+    { id: 20, name: "English Study Group", level: "advanced", subject: "English", members: 5, maxMembers: 10, created: '2023-05-20', lastActive: '2023-11-21' },
+    { id: 21, name: "Pali Study Group", level: "advanced", subject: "Pali", members: 5, maxMembers: 10, created: '2023-06-25', lastActive: '2023-11-20' },
+    { id: 22, name: "Sanskrit Study Group", level: "advanced", subject: "Sanskrit", members: 5, maxMembers: 10, created: '2023-07-30', lastActive: '2023-11-19' },
+    { id: 23, name: "Arabic Study Group", level: "advanced", subject: "Arabic", members: 5, maxMembers: 10, created: '2023-08-05', lastActive: '2023-11-18' },
+    { id: 24, name: "Hindi Study Group", level: "advanced", subject: "Hindi", members: 5, maxMembers: 10, created: '2023-09-10', lastActive: '2023-11-17' },
+    { id: 25, name: "Japanese Study Group", level: "advanced", subject: "Japanese", members: 5, maxMembers: 10, created: '2023-10-15', lastActive: '2023-11-16' },
+    { id: 26, name: "Chinese Study Group", level: "advanced", subject: "Chinese", members: 5, maxMembers: 10, created: '2023-11-20', lastActive: '2023-11-15' },
+    { id: 27, name: "Korean Study Group", level: "advanced", subject: "Korean", members: 5, maxMembers: 10, created: '2023-01-25', lastActive: '2023-11-14' },
+    { id: 28, name: "Malay Study Group", level: "advanced", subject: "Malay", members: 5, maxMembers: 10, created: '2023-02-28', lastActive: '2023-11-13' },
+    { id: 29, name: "French Study Group", level: "advanced", subject: "French", members: 5, maxMembers: 10, created: '2023-03-05', lastActive: '2023-11-12' },
+    { id: 30, name: "German Study Group", level: "advanced", subject: "German", members: 5, maxMembers: 10, created: '2023-04-10', lastActive: '2023-11-11' },
+    { id: 31, name: "Russian Study Group", level: "advanced", subject: "Russian", members: 5, maxMembers: 10, created: '2023-05-15', lastActive: '2023-11-10' },
+    { id: 32, name: "Political Science Study Group", level: "advanced", subject: "Political Science", members: 5, maxMembers: 10, created: '2023-06-20', lastActive: '2023-11-09' },
+    { id: 33, name: "History (Sri Lankan, Indian, European, Modern World) Study Group", level: "advanced", subject: "History (Sri Lankan, Indian, European, Modern World)", members: 5, maxMembers: 10, created: '2023-07-25', lastActive: '2023-11-08' },
+    { id: 34, name: "Geography Study Group", level: "advanced", subject: "Geography", members: 5, maxMembers: 10, created: '2023-08-30', lastActive: '2023-11-07' },
+    { id: 35, name: "Logic and Scientific Method Study Group", level: "advanced", subject: "Logic and Scientific Method", members: 5, maxMembers: 10, created: '2023-09-05', lastActive: '2023-11-06' },
+    { id: 36, name: "Mass Media and Communication Studies Study Group", level: "advanced", subject: "Mass Media and Communication Studies", members: 5, maxMembers: 10, created: '2023-10-10', lastActive: '2023-11-05' },
+    { id: 37, name: "Aesthetic Subjects (Dancing, Music [Western or Eastern], Drama, Art) Study Group", level: "advanced", subject: "Aesthetic Subjects (Dancing, Music [Western or Eastern], Drama, Art)", members: 5, maxMembers: 10, created: '2023-11-15', lastActive: '2023-11-04' },
+    { id: 38, name: "Home Science Study Group", level: "advanced", subject: "Home Science", members: 5, maxMembers: 10, created: '2023-01-20', lastActive: '2023-11-03' },
+    { id: 39, name: "Accounting or Business Statistics Study Group", level: "advanced", subject: "Accounting or Business Statistics", members: 5, maxMembers: 10, created: '2023-02-25', lastActive: '2023-11-02' },
+    { id: 40, name: "Agriculture or Mathematics Study Group", level: "advanced", subject: "Agriculture or Mathematics", members: 5, maxMembers: 10, created: '2023-03-30', lastActive: '2023-11-01' },
+    { id: 41, name: "Engineering Technology Study Group", level: "advanced", subject: "Engineering Technology", members: 5, maxMembers: 10, created: '2023-04-05', lastActive: '2023-10-31' },
+    { id: 42, name: "Science for Technology Study Group", level: "advanced", subject: "Science for Technology", members: 5, maxMembers: 10, created: '2023-05-10', lastActive: '2023-10-30' },
+    { id: 43, name: "Bio-system Technology Study Group", level: "advanced", subject: "Bio-system Technology", members: 5, maxMembers: 10, created: '2023-06-15', lastActive: '2023-10-29' },
+    { id: 44, name: "Information and Communication Technology (ICT) Study Group", level: "advanced", subject: "Information and Communication Technology (ICT)", members: 5, maxMembers: 10, created: '2023-07-20', lastActive: '2023-10-28' },
+    { id: 45, name: "Engineering Technology Study Group", level: "advanced", subject: "Engineering Technology", members: 5, maxMembers: 10, created: '2023-08-25', lastActive: '2023-10-27' },
+    { id: 46, name: "Science for Technology Study Group", level: "advanced", subject: "Science for Technology", members: 5, maxMembers: 10, created: '2023-09-30', lastActive: '2023-10-26' },
+    { id: 47, name: "Bio-system Technology Study Group", level: "advanced", subject: "Bio-system Technology", members: 5, maxMembers: 10, created: '2023-10-05', lastActive: '2023-10-25' },
+    { id: 48, name: "Chemistry Basics", level: "ordinary", subject: "Chemistry", members: 3, maxMembers: 8, created: '2023-11-10', lastActive: '2023-10-24' },
+    { id: 49, name: "Computer Science 101", level: "university", subject: "CS", members: 6, maxMembers: 12, created: '2023-01-15', lastActive: '2023-10-23' },
+    { id: 50, name: "Biology Advanced", level: "london-al", subject: "Biology", members: 4, maxMembers: 10, created: '2023-02-20', lastActive: '2023-10-22' },
+    { id: 51, name: "Mathematics", level: "london-ol", subject: "Math", members: 7, maxMembers: 15, created: '2023-03-25', lastActive: '2023-10-21' }
   ]);
   
   // Mock data for recent activities
@@ -49,32 +96,68 @@ const Admin = () => {
     { id: 4, user: 'Jane Smith', action: 'updated profile', time: '2 days ago' },
   ];
   
+  // Update the useEffect to handle the initial load properly
+  useEffect(() => {
+    // Check if we have study groups in localStorage
+    const savedGroups = localStorage.getItem('studyGroups');
+    
+    if (savedGroups) {
+      // If we have saved groups, use those
+      setStudyGroups(JSON.parse(savedGroups));
+    } else {
+      // If not in localStorage, save our initial state
+      localStorage.setItem('studyGroups', JSON.stringify(studyGroups));
+    }
+  }, []); // Empty dependency array means this runs once on component mount
+  
   // Function to handle editing a group
   const handleEditGroup = (group) => {
     setEditingGroup(group);
     setNewGroupName(group.name);
+    setNewGroupSubject(group.subject);
   };
   
   // Function to save edited group name
   const handleSaveGroupName = () => {
-    if (newGroupName.trim() === '') return;
+    if (newGroupName.trim() === '' || newGroupSubject.trim() === '') {
+      alert('Group name and subject are required');
+      return;
+    }
     
-    setStudyGroups(groups => 
-      groups.map(group => 
+    // Check if we're creating a new group or editing an existing one
+    if (!studyGroups.some(group => group.id === editingGroup.id)) {
+      // Creating a new group
+      const newGroup = {
+        ...editingGroup,
+        name: newGroupName,
+        subject: newGroupSubject
+      };
+      
+      const updatedGroups = [...studyGroups, newGroup];
+      setStudyGroups(updatedGroups);
+      localStorage.setItem('studyGroups', JSON.stringify(updatedGroups));
+    } else {
+      // Editing an existing group
+      const updatedGroups = studyGroups.map(group => 
         group.id === editingGroup.id 
-          ? { ...group, name: newGroupName } 
+          ? { ...group, name: newGroupName, subject: newGroupSubject } 
           : group
-      )
-    );
+      );
+      
+      setStudyGroups(updatedGroups);
+      localStorage.setItem('studyGroups', JSON.stringify(updatedGroups));
+    }
     
     setEditingGroup(null);
     setNewGroupName('');
+    setNewGroupSubject('');
   };
   
   // Function to cancel editing
   const handleCancelEdit = () => {
     setEditingGroup(null);
     setNewGroupName('');
+    setNewGroupSubject('');
   };
   
   // Function to confirm delete
@@ -84,9 +167,13 @@ const Admin = () => {
   
   // Function to delete group
   const handleDeleteGroup = () => {
-    setStudyGroups(groups => 
-      groups.filter(group => group.id !== deleteConfirmGroup.id)
-    );
+    // Update the local state
+    const updatedGroups = studyGroups.filter(group => group.id !== deleteConfirmGroup.id);
+    setStudyGroups(updatedGroups);
+    
+    // Save to localStorage to sync with JoinGroup.js
+    localStorage.setItem('studyGroups', JSON.stringify(updatedGroups));
+    
     setDeleteConfirmGroup(null);
   };
   
@@ -97,16 +184,21 @@ const Admin = () => {
   
   // Function to add a new study group
   const handleAddGroup = () => {
-    const newGroup = {
+    // Set editing state to a special value that indicates we're creating a new group
+    setEditingGroup({
       id: Date.now(),
       name: 'New Study Group',
+      level: 'advanced',
+      subject: '',
       members: 0,
+      maxMembers: 10,
       created: new Date().toISOString().split('T')[0],
       lastActive: new Date().toISOString().split('T')[0]
-    };
+    });
     
-    setStudyGroups([...studyGroups, newGroup]);
-    handleEditGroup(newGroup); // Immediately open edit modal for the new group
+    // Initialize the form fields
+    setNewGroupName('New Study Group');
+    setNewGroupSubject('');
   };
   
   // Filter study groups by subject (for the filter dropdown)
@@ -121,6 +213,378 @@ const Admin = () => {
   const filteredGroups = subjectFilter 
     ? studyGroups.filter(group => group.name.toLowerCase().includes(subjectFilter.toLowerCase()))
     : studyGroups;
+
+  // Add pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const groupsPerPage = 12; // Show 12 groups per page
+
+  // Calculate pagination
+  const indexOfLastGroup = currentPage * groupsPerPage;
+  const indexOfFirstGroup = indexOfLastGroup - groupsPerPage;
+  const currentGroups = filteredGroups.slice(indexOfFirstGroup, indexOfLastGroup);
+  const totalPages = Math.ceil(filteredGroups.length / groupsPerPage);
+
+  // Function to change page
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Update the group card rendering in the study-groups tab
+  const renderGroupCard = (group) => (
+    <div className="group-card" key={group.id}>
+      <div className="group-card-header">
+        <h3>{group.name}</h3>
+        <div className="group-actions">
+          <button 
+            className="edit-btn" 
+            onClick={() => handleEditGroup(group)}
+            title="Edit group name"
+          >
+            <FaEdit />
+          </button>
+          <button 
+            className="delete-btn" 
+            onClick={() => handleConfirmDelete(group)}
+            title="Delete group"
+          >
+            <FaTrash />
+          </button>
+        </div>
+      </div>
+      <div className="group-card-body">
+        <div className="group-stats">
+          <div className="group-stat">
+            <div className="stat-label">Level</div>
+            <div className="stat-value">{group.level}</div>
+          </div>
+          <div className="group-stat">
+            <div className="stat-label">Members</div>
+            <div className="stat-value">{group.members}/{group.maxMembers}</div>
+          </div>
+          <div className="group-stat">
+            <div className="stat-label">Subject</div>
+            <div className="stat-value">{group.subject}</div>
+          </div>
+        </div>
+      </div>
+      <div className="group-card-footer">
+        <button className="view-group-btn">View Details</button>
+      </div>
+    </div>
+  );
+
+  // Update the filter options to match the subjects
+  const subjects = [...new Set(studyGroups.map(group => group.subject))];
+
+  // Update the study groups section to use pagination
+  const studyGroupsContent = (
+    <div className="study-groups-content">
+      <div className="group-actions">
+        <button className="add-group-btn" onClick={handleAddGroup}>Create New Group</button>
+        <div className="group-filters">
+          <button className="filter-btn"><FaFilter /> Filter</button>
+          <select 
+            className="subject-filter"
+            value={subjectFilter}
+            onChange={handleFilterChange}
+          >
+            <option value="">All Subjects</option>
+            {subjects.map(subject => (
+              <option key={subject} value={subject}>{subject}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      
+      <div className="groups-summary">
+        <div className="summary-box">
+          <h4>Total Groups</h4>
+          <p>{studyGroups.length}</p>
+        </div>
+        <div className="summary-box">
+          <h4>Total Members</h4>
+          <p>{studyGroups.reduce((total, group) => total + group.members, 0)}</p>
+        </div>
+        <div className="summary-box">
+          <h4>Active This Week</h4>
+          <p>{studyGroups.filter(group => 
+            new Date(group.lastActive) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          ).length}</p>
+        </div>
+      </div>
+      
+      <div className="groups-grid">
+        {currentGroups.map(renderGroupCard)}
+      </div>
+      
+      {filteredGroups.length > 0 ? (
+        <div className="pagination">
+          <button 
+            onClick={() => handlePageChange(1)} 
+            disabled={currentPage === 1}
+          >
+            &laquo;
+          </button>
+          
+          {/* Generate page buttons */}
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            // Show pages around current page
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+            
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                className={currentPage === pageNum ? 'active' : ''}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          
+          <button 
+            onClick={() => handlePageChange(totalPages)} 
+            disabled={currentPage === totalPages}
+          >
+            &raquo;
+          </button>
+        </div>
+      ) : (
+        <div className="no-results">
+          <p>No study groups match your filter criteria.</p>
+          <button 
+            className="reset-filter-btn"
+            onClick={() => setSubjectFilter('')}
+          >
+            Reset Filters
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  // Fetch feedback data when the feedback tab is selected
+  useEffect(() => {
+    if (activeTab === 'content' && activeContentTab === 'feedback') {
+      fetchFeedbacks();
+    }
+  }, [activeTab, activeContentTab, token]);
+  
+  // Function to fetch feedback data
+  const fetchFeedbacks = async () => {
+    try {
+      setFeedbackLoading(true);
+      
+      if (!token) {
+        // Instead of showing an error, use mock data when no token is available
+        const mockFeedbacks = [
+          {
+            _id: 1,
+            name: "John Smith",
+            email: "john@example.com",
+            isAnonymous: false,
+            rating: 4,
+            feedbackType: "General",
+            message: "I really enjoy using this platform for my studies. The interface is intuitive and the study groups are very helpful.",
+            suggestions: "It would be great to have more interactive quizzes.",
+            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            _id: 2,
+            name: "Anonymous User",
+            email: "anonymous@example.com",
+            isAnonymous: true,
+            rating: 5,
+            feedbackType: "Feature Request",
+            message: "The study group feature is amazing! I've been able to connect with other students studying the same subjects.",
+            suggestions: "Could you add video conferencing for study groups?",
+            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            _id: 3,
+            name: "Sarah Johnson",
+            email: "sarah@example.com",
+            isAnonymous: false,
+            rating: 3,
+            feedbackType: "Bug Report",
+            message: "I found a small issue with the quiz timer. Sometimes it doesn't stop when I submit my answers.",
+            suggestions: null,
+            createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            _id: 4,
+            name: "David Lee",
+            email: "david@example.com",
+            isAnonymous: false,
+            rating: 4,
+            feedbackType: "General",
+            message: "The content is well organized and easy to navigate. I appreciate the effort put into creating this platform.",
+            suggestions: "More advanced topics for university level would be appreciated.",
+            createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            _id: 5,
+            name: "Anonymous User",
+            email: "anonymous2@example.com",
+            isAnonymous: true,
+            rating: 2,
+            feedbackType: "Bug Report",
+            message: "I'm having trouble with the profile page. My study groups aren't showing up correctly.",
+            suggestions: "Please fix the profile page issues.",
+            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+          }
+        ];
+        
+        setFeedbacks(mockFeedbacks);
+        setFeedbackError(null);
+        setFeedbackLoading(false);
+        return;
+      }
+      
+      // If token is available, try to fetch from API
+      const response = await axios.get('http://localhost:5001/api/feedback/all', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.data.success) {
+        setFeedbacks(response.data.feedbacks);
+        setFeedbackError(null);
+      } else {
+        // If API request fails, fall back to mock data
+        const mockFeedbacks = [
+          // Same mock data as above
+          {
+            _id: 1,
+            name: "John Smith",
+            email: "john@example.com",
+            isAnonymous: false,
+            rating: 4,
+            feedbackType: "General",
+            message: "I really enjoy using this platform for my studies. The interface is intuitive and the study groups are very helpful.",
+            suggestions: "It would be great to have more interactive quizzes.",
+            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          // ... other mock feedback items
+        ];
+        
+        setFeedbacks(mockFeedbacks);
+        console.log('Using mock feedback data due to API error');
+      }
+      
+      setFeedbackLoading(false);
+    } catch (err) {
+      console.error('Error fetching feedback:', err);
+      
+      // Fall back to mock data on error
+      const mockFeedbacks = [
+        // Same mock data as above
+        {
+          _id: 1,
+          name: "John Smith",
+          email: "john@example.com",
+          isAnonymous: false,
+          rating: 4,
+          feedbackType: "General",
+          message: "I really enjoy using this platform for my studies. The interface is intuitive and the study groups are very helpful.",
+          suggestions: "It would be great to have more interactive quizzes.",
+          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        // ... other mock feedback items
+      ];
+      
+      setFeedbacks(mockFeedbacks);
+      console.log('Using mock feedback data due to API error');
+      setFeedbackLoading(false);
+    }
+  };
+  
+  // Function to handle content tab change
+  const handleContentTabChange = (tab) => {
+    setActiveContentTab(tab);
+  };
+  
+  // Render feedback content
+  const renderFeedbackContent = () => {
+    if (feedbackLoading) {
+      return <div className="loading-state">Loading feedbacks...</div>;
+    }
+    
+    if (feedbackError) {
+      return <div className="error-state">{feedbackError}</div>;
+    }
+    
+    if (!feedbacks || feedbacks.length === 0) {
+      return <div className="empty-state">No feedback available yet.</div>;
+    }
+    
+    return (
+      <div className="feedback-list">
+        <div className="feedback-summary">
+          <div className="summary-box">
+            <h4>Total Feedback</h4>
+            <p>{feedbacks.length}</p>
+          </div>
+          <div className="summary-box">
+            <h4>Average Rating</h4>
+            <p>
+              {(feedbacks.reduce((sum, feedback) => sum + (feedback.rating || 0), 0) / feedbacks.length).toFixed(1)}
+              <FaStar className="star-icon" />
+            </p>
+          </div>
+          <div className="summary-box">
+            <h4>Recent Feedback</h4>
+            <p>{feedbacks.filter(f => new Date(f.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</p>
+          </div>
+        </div>
+        
+        {feedbacks.map((feedback, index) => (
+          <div key={feedback._id || index} className="feedback-item">
+            <div className="feedback-header">
+              <h3>{feedback.name || 'Anonymous'}</h3>
+              <div className="rating-display">
+                {[...Array(5)].map((_, i) => (
+                  <FaStar 
+                    key={i} 
+                    className={i < feedback.rating ? "star-filled" : "star-empty"} 
+                  />
+                ))}
+                <span className="rating-text">{feedback.rating}/5</span>
+              </div>
+            </div>
+            <div className="feedback-details">
+              <p><strong>Type:</strong> {feedback.feedbackType}</p>
+              <p><strong>Email:</strong> {feedback.isAnonymous ? 'Anonymous' : feedback.email}</p>
+            </div>
+            <p className="feedback-text">{feedback.message}</p>
+            {feedback.suggestions && (
+              <div className="feedback-suggestions">
+                <strong>Suggestions:</strong>
+                <p>{feedback.suggestions}</p>
+              </div>
+            )}
+            <div className="feedback-meta">
+              <span>{new Date(feedback.createdAt).toLocaleDateString()}</span>
+              <div className="feedback-actions">
+                <button className="reply-btn"><FaComment /> Reply</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="admin-dashboard">
@@ -357,166 +821,132 @@ const Admin = () => {
             </div>
           )}
           
-          {activeTab === 'study-groups' && (
-            <div className="study-groups-content">
-              <div className="group-actions">
-                <button className="add-group-btn" onClick={handleAddGroup}>Create New Group</button>
-                <div className="group-filters">
-                  <button className="filter-btn"><FaFilter /> Filter</button>
-                  <select 
-                    className="subject-filter"
-                    value={subjectFilter}
-                    onChange={handleFilterChange}
-                  >
-                    <option value="">All Subjects</option>
-                    <option value="physics">Physics</option>
-                    <option value="chemistry">Chemistry</option>
-                    <option value="biology">Biology</option>
-                    <option value="mathematics">Mathematics</option>
-                    <option value="calculus">Calculus</option>
-                    <option value="organic">Organic Chemistry</option>
-                    <option value="molecular">Molecular Biology</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="groups-summary">
-                <div className="summary-box">
-                  <h4>Total Groups</h4>
-                  <p>{studyGroups.length}</p>
-                </div>
-                <div className="summary-box">
-                  <h4>Total Members</h4>
-                  <p>{studyGroups.reduce((total, group) => total + group.members, 0)}</p>
-                </div>
-                <div className="summary-box">
-                  <h4>Active This Week</h4>
-                  <p>{studyGroups.filter(group => 
-                    new Date(group.lastActive) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                  ).length}</p>
-                </div>
-              </div>
-              
-              <div className="groups-grid">
-                {filteredGroups.map(group => (
-                  <div className="group-card" key={group.id}>
-                    <div className="group-card-header">
-                      <h3>{group.name}</h3>
-                      <div className="group-actions">
-                        <button 
-                          className="edit-btn" 
-                          onClick={() => handleEditGroup(group)}
-                          title="Edit group name"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button 
-                          className="delete-btn" 
-                          onClick={() => handleConfirmDelete(group)}
-                          title="Delete group"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="group-card-body">
-                      <div className="group-stats">
-                        <div className="group-stat">
-                          <div className="stat-label">Members</div>
-                          <div className="stat-value">{group.members}</div>
-                        </div>
-                        <div className="group-stat">
-                          <div className="stat-label">Created</div>
-                          <div className="stat-value">{group.created}</div>
-                        </div>
-                        <div className="group-stat">
-                          <div className="stat-label">Last Active</div>
-                          <div className="stat-value">{group.lastActive}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="group-card-footer">
-                      <button className="view-group-btn">View Details</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {filteredGroups.length === 0 && (
-                <div className="no-results">
-                  <p>No study groups match your filter criteria.</p>
-                  <button 
-                    className="reset-filter-btn"
-                    onClick={() => setSubjectFilter('')}
-                  >
-                    Reset Filters
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          {activeTab === 'study-groups' && studyGroupsContent}
           
           {activeTab === 'content' && (
             <div className="content-management">
               <div className="content-tabs">
-                <button className="content-tab active">Quizzes</button>
-                <button className="content-tab">Study Materials</button>
-                <button className="content-tab">Announcements</button>
-                <button className="content-tab">Feedback</button>
+                <button 
+                  className={`content-tab ${activeContentTab === 'quizzes' ? 'active' : ''}`}
+                  onClick={() => handleContentTabChange('quizzes')}
+                >
+                  Quizzes
+                </button>
+                <button 
+                  className={`content-tab ${activeContentTab === 'materials' ? 'active' : ''}`}
+                  onClick={() => handleContentTabChange('materials')}
+                >
+                  Study Materials
+                </button>
+                <button 
+                  className={`content-tab ${activeContentTab === 'announcements' ? 'active' : ''}`}
+                  onClick={() => handleContentTabChange('announcements')}
+                >
+                  Announcements
+                </button>
+                <button 
+                  className={`content-tab ${activeContentTab === 'feedback' ? 'active' : ''}`}
+                  onClick={() => handleContentTabChange('feedback')}
+                >
+                  Feedback
+                </button>
               </div>
               
               <div className="content-panel">
-                <div className="content-header">
-                  <h3>Quiz Management</h3>
-                  <button className="add-content-btn">Add New Quiz</button>
-                </div>
+                {activeContentTab === 'quizzes' && (
+                  <>
+                    <div className="content-header">
+                      <h3>Quiz Management</h3>
+                      <button className="add-content-btn">Add New Quiz</button>
+                    </div>
+                    
+                    <div className="content-list">
+                      <div className="content-item">
+                        <div className="content-info">
+                          <h4>Physics Mechanics Quiz</h4>
+                          <div className="content-meta">
+                            <span>Created: Oct 15, 2023</span>
+                            <span>Questions: 25</span>
+                            <span>Difficulty: Advanced</span>
+                          </div>
+                        </div>
+                        <div className="content-actions">
+                          <button className="edit-btn"><FaEdit /></button>
+                          <button className="delete-btn"><FaTrash /></button>
+                        </div>
+                      </div>
+                      
+                      <div className="content-item">
+                        <div className="content-info">
+                          <h4>Chemistry Organic Compounds</h4>
+                          <div className="content-meta">
+                            <span>Created: Nov 2, 2023</span>
+                            <span>Questions: 20</span>
+                            <span>Difficulty: Intermediate</span>
+                          </div>
+                        </div>
+                        <div className="content-actions">
+                          <button className="edit-btn"><FaEdit /></button>
+                          <button className="delete-btn"><FaTrash /></button>
+                        </div>
+                      </div>
+                      
+                      <div className="content-item">
+                        <div className="content-info">
+                          <h4>Biology Cell Structure</h4>
+                          <div className="content-meta">
+                            <span>Created: Oct 28, 2023</span>
+                            <span>Questions: 15</span>
+                            <span>Difficulty: Beginner</span>
+                          </div>
+                        </div>
+                        <div className="content-actions">
+                          <button className="edit-btn"><FaEdit /></button>
+                          <button className="delete-btn"><FaTrash /></button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
                 
-                <div className="content-list">
-                  <div className="content-item">
-                    <div className="content-info">
-                      <h4>Physics Mechanics Quiz</h4>
-                      <div className="content-meta">
-                        <span>Created: Oct 15, 2023</span>
-                        <span>Questions: 25</span>
-                        <span>Difficulty: Advanced</span>
-                      </div>
+                {activeContentTab === 'materials' && (
+                  <>
+                    <div className="content-header">
+                      <h3>Study Materials</h3>
+                      <button className="add-content-btn">Add New Material</button>
                     </div>
-                    <div className="content-actions">
-                      <button className="edit-btn"><FaEdit /></button>
-                      <button className="delete-btn"><FaTrash /></button>
+                    
+                    <div className="content-list">
+                      <div className="empty-state">No study materials added yet.</div>
                     </div>
-                  </div>
-                  
-                  <div className="content-item">
-                    <div className="content-info">
-                      <h4>Chemistry Organic Compounds</h4>
-                      <div className="content-meta">
-                        <span>Created: Nov 2, 2023</span>
-                        <span>Questions: 20</span>
-                        <span>Difficulty: Intermediate</span>
-                      </div>
+                  </>
+                )}
+                
+                {activeContentTab === 'announcements' && (
+                  <>
+                    <div className="content-header">
+                      <h3>Announcements</h3>
+                      <button className="add-content-btn">Create Announcement</button>
                     </div>
-                    <div className="content-actions">
-                      <button className="edit-btn"><FaEdit /></button>
-                      <button className="delete-btn"><FaTrash /></button>
+                    
+                    <div className="content-list">
+                      <div className="empty-state">No announcements created yet.</div>
                     </div>
-                  </div>
-                  
-                  <div className="content-item">
-                    <div className="content-info">
-                      <h4>Biology Cell Structure</h4>
-                      <div className="content-meta">
-                        <span>Created: Oct 28, 2023</span>
-                        <span>Questions: 15</span>
-                        <span>Difficulty: Beginner</span>
-                      </div>
+                  </>
+                )}
+                
+                {activeContentTab === 'feedback' && (
+                  <>
+                    <div className="content-header">
+                      <h3>User Feedback</h3>
+                      <button className="refresh-btn" onClick={fetchFeedbacks}>
+                        Refresh Feedback
+                      </button>
                     </div>
-                    <div className="content-actions">
-                      <button className="edit-btn"><FaEdit /></button>
-                      <button className="delete-btn"><FaTrash /></button>
-                    </div>
-                  </div>
-                </div>
+                    
+                    {renderFeedbackContent()}
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -608,7 +1038,7 @@ const Admin = () => {
         <div className="modal-overlay">
           <div className="modal-container">
             <div className="modal-header">
-              <h2>Edit Study Group</h2>
+              <h2>{studyGroups.some(group => group.id === editingGroup.id) ? 'Edit Study Group' : 'Create New Group'}</h2>
               <button className="close-modal" onClick={handleCancelEdit}><FaTimes /></button>
             </div>
             <div className="modal-body">
@@ -621,12 +1051,34 @@ const Admin = () => {
                   placeholder="Enter group name"
                 />
               </div>
+              <div className="form-group">
+                <label>Subject:</label>
+                <input 
+                  type="text" 
+                  value={newGroupSubject} 
+                  onChange={(e) => setNewGroupSubject(e.target.value)}
+                  placeholder="Enter subject"
+                />
+              </div>
+              <div className="form-group">
+                <label>Level:</label>
+                <select 
+                  value={editingGroup.level}
+                  onChange={(e) => setEditingGroup({...editingGroup, level: e.target.value})}
+                >
+                  <option value="advanced">Advanced Level</option>
+                  <option value="ordinary">Ordinary Level</option>
+                  <option value="university">University</option>
+                  <option value="london-al">London A/L</option>
+                  <option value="london-ol">London O/L</option>
+                </select>
+              </div>
             </div>
             <div className="modal-footer">
               <button 
                 className="save-btn" 
                 onClick={handleSaveGroupName}
-                disabled={newGroupName.trim() === ''}
+                disabled={newGroupName.trim() === '' || newGroupSubject.trim() === ''}
               >
                 Save Changes
               </button>

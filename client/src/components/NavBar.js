@@ -107,13 +107,6 @@ function NavBar() {
                     className="profile-image" 
                   />
                 </Link>
-                <Link 
-                  to="/reviews" 
-                  className="review-button"
-                  title="View my feedback"
-                >
-                  <FaComments /> Reviews
-                </Link>
               </div>
             )}
           </div>
