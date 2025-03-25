@@ -15,6 +15,8 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
+  position: relative;
+  z-index: 1;
 }
 
 .signup-form h2 {
@@ -25,27 +27,44 @@
 
 .form-group {
   margin-bottom: 1rem;
+  position: relative;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
   color: #666;
+  font-weight: 500;
 }
 
-.form-group input,
-.form-group select {
+.form-group input {
   width: 100%;
   padding: 0.8rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+  transition: border-color 0.3s ease;
 }
 
-.form-group input:focus,
-.form-group select:focus {
+.form-group input:focus {
   outline: none;
   border-color: #007bff;
+}
+
+.form-group input.error {
+  border-color: #dc3545;
+}
+
+.field-error {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.field-error ul {
+  margin: 0;
+  padding-left: 1.5rem;
 }
 
 .form-group select {
@@ -63,10 +82,16 @@
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s;
+  margin-top: 1rem;
 }
 
 .signup-button:hover {
   background: #0056b3;
+}
+
+.signup-button:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
 }
 
 .error-message {
@@ -93,6 +118,19 @@
   text-decoration: underline;
 }
 
+/* Add these styles to ensure visibility */
+.App {
+  min-height: 100vh;
+  position: relative;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 10;
+}
+
 @media (max-width: 480px) {
   .signup-form {
     padding: 1.5rem;
@@ -102,8 +140,7 @@
     font-size: 1.5rem;
   }
 
-  .form-group input,
-  .form-group select {
+  .form-group input {
     padding: 10px;
   }
 }

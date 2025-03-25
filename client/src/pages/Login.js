@@ -9,9 +9,11 @@ const Login = () => {
     email: '',
     password: ''
   });
+  const [errors, setErrors] = useState({});
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
@@ -19,18 +21,54 @@ const Login = () => {
   // Get the redirect path from state or default to home
   const redirectPath = location.state?.from || '/';
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    // Password validation
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    
+    if (!validateForm()) {
+      return;
+    }
 
+    setIsLoading(true);
     try {
       console.log('Attempting login with:', formData);
       
@@ -56,6 +94,8 @@ const Login = () => {
       );
       setShowErrorPopup(true);
       setTimeout(() => setShowErrorPopup(false), 3000);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -89,8 +129,9 @@ const Login = () => {
               value={formData.email}
               onChange={handleChange}
               placeholder="Email Address"
-              required
+              className={errors.email ? 'error' : ''}
             />
+            {errors.email && <span className="field-error">{errors.email}</span>}
           </div>
           <div className="form-group">
             <input
@@ -99,23 +140,20 @@ const Login = () => {
               value={formData.password}
               onChange={handleChange}
               placeholder="Password"
-              required
+              className={errors.password ? 'error' : ''}
             />
-            <small className="password-requirements">
-              Password must contain:
-              <ul>
-                <li>At least 8 characters</li>
-                <li>One uppercase letter</li>
-                <li>One lowercase letter</li>
-                <li>One number</li>
-                <li>One special character (!@#$%^&*)</li>
-              </ul>
-            </small>
+            {errors.password && <span className="field-error">{errors.password}</span>}
           </div>
           <div className="forgot-password">
             <a href="/forgot-password">Forgot Password?</a>
           </div>
-          <button type="submit" className="login-button">Login</button>
+          <button 
+            type="submit" 
+            className="login-button"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
         <p className="signup-link">
           Don't have an account? <a href="/signup">Sign up here</a>
