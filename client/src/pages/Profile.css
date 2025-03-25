@@ -617,11 +617,20 @@
 }
 
 .profile-email {
-  font-size: 0.9rem;
   color: #666;
-  margin-top: 0;
-  margin-bottom: 30px;
-  text-align: center;
+  margin-bottom: 10px;
+}
+
+.profile-university {
+  color: #444;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.profile-course {
+  color: #444;
+  font-weight: 500;
+  margin-bottom: 15px;
 }
 
 .countdown-container {

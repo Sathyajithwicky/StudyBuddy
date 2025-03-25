@@ -382,6 +382,8 @@ const Profile = () => {
             </div>
             <h3 className="profile-username">{getFullName()}</h3>
             <p className="profile-email">{userData.email || "user@example.com"}</p>
+            <p className="profile-university">{userData.university || "University not set"}</p>
+            <p className="profile-course">{userData.course || "Course not set"}</p>
             
             <div className="countdown-container">
               <h4 className="countdown-title">Time Until {userData.examName || "Advanced Level"}</h4>
