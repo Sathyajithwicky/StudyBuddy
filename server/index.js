@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const messagesRoutes = require('./routes/messages');
+const userRoutes = require('./routes/userRoutes');
 require('dotenv').config();
 const rateLimit = require('express-rate-limit');
 
@@ -63,10 +64,9 @@ const limiter = rateLimit({
 // Apply limiter to all auth routes
 app.use('/api/auth', limiter);
 
-// Mount auth routes after limiter
+// Mount routes
 app.use('/api/auth', authRoutes);
-
-// Add this with your other routes
+app.use('/api/users', userRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/feedback', require('./routes/feedback'));
 
@@ -118,7 +118,8 @@ connectDB().then(() => {
     console.log('GET  /test');
     console.log('POST /api/auth/register');
     console.log('POST /api/auth/login');
+    console.log('PUT  /api/users/profile');
   });
 }).catch(error => {
   console.error('Server startup failed:', error);
-}); 
+});  

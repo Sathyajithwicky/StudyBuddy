@@ -16,6 +16,12 @@ const Profile = () => {
     examName: '',
     examDate: ''
   });
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    university: '',
+    course: ''
+  });
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   
@@ -142,6 +148,12 @@ const Profile = () => {
             });
           }
         }
+        setProfileData({
+          firstName: response.data.user.firstName || '',
+          lastName: response.data.user.lastName || '',
+          university: response.data.user.university || '',
+          course: response.data.user.course || ''
+        });
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -336,6 +348,70 @@ const Profile = () => {
     // Clean up on component unmount
     return () => clearInterval(timerInterval);
   }, [userData.examDate]); // Recalculate when exam date changes
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleProfileSubmit = async () => {
+    try {
+      // Validate inputs
+      if (!profileData.firstName.trim() || !profileData.lastName.trim() || 
+          !profileData.university.trim() || !profileData.course.trim()) {
+        setError('Please fill in all profile details');
+        setTimeout(() => setError(null), 3000);
+        return;
+      }
+
+      console.log('Sending profile update request with data:', profileData);
+      console.log('Using token:', token);
+
+      const response = await axios.put(
+        '/api/users/profile',
+        profileData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Profile update response:', response.data);
+
+      if (response.data.success) {
+        setUserData(response.data.user);
+        setSuccessMessage('Profile updated successfully!');
+        setShowSuccessMessage(true);
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 3000);
+        setIsEditing(false);
+      } else {
+        throw new Error(response.data.message || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      console.error('Error response:', error.response?.data);
+      
+      if (error.response?.status === 401) {
+        setError('Your session has expired. Please log in again.');
+        setTimeout(() => {
+          logout();
+          navigate('/login');
+        }, 3000);
+      } else {
+        setError(error.response?.data?.message || 'Failed to update profile. Please try again.');
+        setTimeout(() => {
+          setError(null);
+        }, 3000);
+      }
+    }
+  };
 
   if (loading) {
     return <div className="loading">Loading profile...</div>;
@@ -534,6 +610,59 @@ const Profile = () => {
             )}
           </div>
           
+          {isEditing ? (
+            <div className="profile-edit-form">
+              <h3>Edit Profile</h3>
+              <div className="form-group">
+                <label>First Name</label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={profileData.firstName}
+                  onChange={handleProfileChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={profileData.lastName}
+                  onChange={handleProfileChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>University</label>
+                <input
+                  type="text"
+                  name="university"
+                  value={profileData.university}
+                  onChange={handleProfileChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Course</label>
+                <input
+                  type="text"
+                  name="course"
+                  value={profileData.course}
+                  onChange={handleProfileChange}
+                />
+              </div>
+              <div className="button-group">
+                <button onClick={handleProfileSubmit} className="save-button">Save Changes</button>
+                <button onClick={() => setIsEditing(false)} className="cancel-button">Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div className="profile-info">
+              <h3>Profile Information</h3>
+              <p><strong>Name:</strong> {getFullName()}</p>
+              <p><strong>University:</strong> {userData.university}</p>
+              <p><strong>Course:</strong> {userData.course}</p>
+              <button onClick={() => setIsEditing(true)} className="edit-button">Edit Profile</button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -541,3 +670,5 @@ const Profile = () => {
 };
 
 export default Profile;
+
+
