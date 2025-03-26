@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Profile.css';
 import { useAuth } from '../context/AuthContext';
-import { FaSignOutAlt, FaUserFriends } from 'react-icons/fa';
+import { FaSignOutAlt, FaUserFriends, FaTrashAlt } from 'react-icons/fa';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -37,6 +37,9 @@ const Profile = () => {
     { level: 'Advanced Level', subject: 'Physics', attempted: '10/100', average: '60%' },
     { level: 'Advanced Level', subject: 'Physics', attempted: '10/100', average: '60%' }
   ];
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
 
   // FIRST: Immediately try to get data from localStorage when component mounts
   useEffect(() => {
@@ -413,6 +416,36 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      if (deleteConfirmation !== 'DELETE') {
+        setError('Please type DELETE to confirm account deletion');
+        setTimeout(() => setError(null), 3000);
+        return;
+      }
+
+      const response = await axios.delete('/api/users/account', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data.success) {
+        setSuccessMessage('Account deleted successfully');
+        setShowSuccessMessage(true);
+        setTimeout(() => {
+          logout();
+          navigate('/login');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      setError(error.response?.data?.message || 'Failed to delete account. Please try again.');
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading profile...</div>;
   }
@@ -424,6 +457,45 @@ const Profile = () => {
   console.log('Current userData state:', userData);
   console.log('Current examData state:', examData);
   console.log('hasExamData:', hasExamData);
+
+  const DeleteAccountModal = () => (
+    <div className="delete-account-modal" onClick={(e) => {
+      e.stopPropagation();
+      setShowDeleteModal(false);
+      setDeleteConfirmation('');
+    }}>
+      <div className="delete-account-content" onClick={(e) => e.stopPropagation()}>
+        <h3>Delete Account</h3>
+        <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+        <p>Type <strong>DELETE</strong> to confirm:</p>
+        <input
+          type="text"
+          value={deleteConfirmation}
+          onChange={(e) => setDeleteConfirmation(e.target.value)}
+          placeholder="Type DELETE to confirm"
+          autoFocus
+        />
+        <div className="delete-account-buttons">
+          <button 
+            className="cancel-button"
+            onClick={() => {
+              setShowDeleteModal(false);
+              setDeleteConfirmation('');
+            }}
+          >
+            Cancel
+          </button>
+          <button 
+            className="delete-button"
+            onClick={handleDeleteAccount}
+            disabled={deleteConfirmation !== 'DELETE'}
+          >
+            Delete Account
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="profile-page-container">
@@ -560,6 +632,21 @@ const Profile = () => {
               </button>
             </div>
           </div>
+          
+          <div className="profile-actions">
+            <button 
+              className="edit-profile-button"
+              onClick={() => setIsEditing(true)}
+            >
+              Edit Profile
+            </button>
+            <button 
+              className="delete-account-button"
+              onClick={() => setShowDeleteModal(true)}
+            >
+              <FaTrashAlt /> Delete Account
+            </button>
+          </div>
         </div>
 
         {/* Right column - Study Groups */}
@@ -660,15 +747,14 @@ const Profile = () => {
               <p><strong>Name:</strong> {getFullName()}</p>
               <p><strong>University:</strong> {userData.university}</p>
               <p><strong>Course:</strong> {userData.course}</p>
-              <button onClick={() => setIsEditing(true)} className="edit-button">Edit Profile</button>
             </div>
           )}
         </div>
       </div>
+      
+      {showDeleteModal && <DeleteAccountModal />}
     </div>
   );
 };
 
 export default Profile;
-
-

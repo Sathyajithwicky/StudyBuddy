@@ -81,4 +81,28 @@ router.put('/profile', auth, async (req, res) => {
   }
 });
 
+// @route   DELETE api/users/account
+// @desc    Delete user account
+// @access  Private
+router.delete('/account', auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Find and delete the user
+    const user = await User.findByIdAndDelete(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Account deleted successfully' 
+    });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router; 
