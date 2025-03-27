@@ -17,6 +17,9 @@ import BiologyGroup from './pages/groups/BiologyGroup';
 import CombinedMathsGroup from './pages/CombinedmathsGroup';
 import Reviews from './pages/Reviews';
 import Admin from './pages/Admin';
+import Notifications from './pages/Notifications';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
@@ -30,6 +33,8 @@ function App() {
           <Route path="/register" element={<SignUp />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Protected routes */}
           <Route path="/pomodoro" element={
@@ -50,6 +55,11 @@ function App() {
           <Route path="/feedback" element={
             <ProtectedRoute>
               <Feedback />
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <Notifications />
             </ProtectedRoute>
           } />
           <Route path="/physics-group" element={
