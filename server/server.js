@@ -3,6 +3,7 @@ const connectDB = require('./config/db');
 const cors = require('cors');
 const path = require('path');
 const feedbackRoutes = require('./routes/feedback');
+const faqRoutes = require('./routes/faq.js');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/faq', faqRoutes); // Added FAQ API route
 
 // Test route
 app.get('/test', (req, res) => {
@@ -54,4 +56,4 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = app; 
+module.exports = app;

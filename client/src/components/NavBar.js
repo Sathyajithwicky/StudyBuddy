@@ -86,6 +86,7 @@ function NavBar() {
             Study Groups
           </Link>
           <Link to="/feedback" className="nav-link">Feedback</Link>
+          <Link to="/faq" className="nav-link">FAQ</Link>
           
           <div className="auth-links">
             {!isAuthenticated ? (

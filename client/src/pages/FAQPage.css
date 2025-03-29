@@ -1,0 +1,157 @@
+/* General Styles */
+.faq-page {
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .faq-title {
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .faq-list {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .faq-item {
+    background-color: #f9f9f9;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+  }
+  
+  .faq-item h3 {
+    font-size: 1.25rem;
+    margin: 0;
+  }
+  
+  .faq-item p {
+    font-size: 1rem;
+    margin: 10px 0;
+  }
+  
+  .faq-submit {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+  }
+  
+  .faq-submit input[type="text"] {
+    padding: 10px;
+    width: 70%;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+  }
+  
+  .faq-submit button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+  
+  .faq-submit button:hover {
+    background-color: #45a049;
+  }
+  
+  /* Error message */
+  .error-message {
+    color: red;
+    font-size: 1rem;
+    text-align: center;
+    margin-top: 10px;
+  }
+  
+  /* Admin Controls */
+  .faq-approve {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .faq-approve input {
+    padding: 10px;
+    width: 70%;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+  }
+  
+  .faq-approve button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #3b8e1b;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .faq-approve button:hover {
+    background-color: #2e7d32;
+  }
+  
+  /* Editable FAQ Styling */
+  .faq-item input {
+    padding: 10px;
+    font-size: 1rem;
+    width: 70%;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+  }
+  
+  .faq-item button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #ff9800;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .faq-item button:hover {
+    background-color: #f57c00;
+  }
+  
+  .faq-item .delete-btn {
+    background-color: #f44336;
+  }
+  
+  .faq-item .delete-btn:hover {
+    background-color: #e53935;
+  }
+  
+  .faq-item .edit-btn {
+    background-color: #2196F3;
+  }
+  
+  .faq-item .edit-btn:hover {
+    background-color: #1976D2;
+  }
+  
+  .faq-item .approve-btn {
+    background-color: #4CAF50;
+  }
+  
+  .faq-item .approve-btn:hover {
+    background-color: #388E3C;
+  }
+  
+  .faq-item .answer-status {
+    font-style: italic;
+    color: #888;
+  }
+  

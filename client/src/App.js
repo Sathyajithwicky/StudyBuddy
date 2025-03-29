@@ -17,6 +17,7 @@ import BiologyGroup from './pages/groups/BiologyGroup';
 import CombinedMathsGroup from './pages/CombinedmathsGroup';
 import Reviews from './pages/Reviews';
 import Admin from './pages/Admin';
+import FAQPage from './pages/FAQPage';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/register" element={<SignUp />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/faq" element={<FAQPage />} />
 
           {/* Protected routes */}
           <Route path="/pomodoro" element={
