@@ -38,22 +38,86 @@
   margin: 0;
 }
 
+.profile-avatar-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .profile-avatar {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  border: 1px solid #ddd;
-  object-fit: cover; /* For profile images */
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .profile-avatar-initials {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: #000;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #000000;
-  color: white;
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: bold;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.profile-photo-upload {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: #000;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid #fff;
+}
+
+.profile-photo-upload:hover {
+  background-color: #333;
+  transform: scale(1.1);
+}
+
+.camera-icon {
+  color: white;
+  font-size: 16px;
+}
+
+.upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #fff;
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .profile-header h3 {

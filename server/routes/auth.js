@@ -21,10 +21,33 @@ router.get('/test', (req, res) => {
   res.json({ message: 'Auth routes are working' });
 });
 
+// Add email validation function
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate request body
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide both email and password'
+      });
+    }
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid email address'
+      });
+    }
+
+    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
@@ -33,6 +56,15 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    // Check if user is active
+    if (user.status === 'inactive') {
+      return res.status(401).json({
+        success: false,
+        message: 'Account is inactive. Please contact support.'
+      });
+    }
+
+    // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
@@ -41,19 +73,33 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Create token with consistent structure
+    // Generate token payload
+    const payload = {
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role || 'student'
+      }
+    };
+
+    // Sign token with expiration
     const token = jwt.sign(
-      { 
-        user: {
-          id: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName
-        }
-      },
+      payload,
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { 
+        expiresIn: '24h',
+        algorithm: 'HS256' // Explicitly specify the algorithm
+      }
     );
 
+    // Update last login timestamp
+    await User.findByIdAndUpdate(user._id, {
+      $set: { lastLogin: new Date() }
+    });
+
+    // Send response
     res.json({
       success: true,
       message: 'Login successful',
@@ -62,15 +108,20 @@ router.post('/login', async (req, res) => {
         id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
-        email: user.email
+        email: user.email,
+        role: user.role || 'student',
+        university: user.university,
+        course: user.course,
+        profilePicture: user.profilePicture
       }
     });
+
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error during login',
-      error: error.message
+      message: 'An error occurred during login. Please try again later.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
@@ -200,7 +251,8 @@ router.get('/profile', verifyToken, async (req, res) => {
         university: user.university,
         createdAt: user.createdAt,
         examName: user.examName,
-        examDate: user.examDate
+        examDate: user.examDate,
+        profilePicture: user.profilePicture
       }
     });
   } catch (error) {
@@ -399,6 +451,146 @@ router.post('/reset-password', async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'An error occurred while resetting your password'
+    });
+  }
+});
+
+// @route   GET api/auth/validate
+// @desc    Validate JWT token
+// @access  Public
+router.get('/validate', async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.json({ valid: false });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.user.id).select('-password');
+    
+    if (!user) {
+      return res.json({ valid: false });
+    }
+
+    res.json({ valid: true });
+  } catch (error) {
+    res.json({ valid: false });
+  }
+});
+
+// @route   POST api/auth/refresh
+// @desc    Refresh JWT token
+// @access  Private
+router.post('/refresh', verifyToken, async (req, res) => {
+  try {
+    // Get user data
+    const user = await User.findById(req.user.id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate new token
+    const payload = {
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role || 'student'
+      }
+    };
+
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { 
+        expiresIn: '24h',
+        algorithm: 'HS256'
+      }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role || 'student',
+        university: user.university,
+        course: user.course
+      }
+    });
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error refreshing token'
+    });
+  }
+});
+
+// @route   POST api/auth/admin/login
+// @desc    Admin login
+// @access  Public
+router.post('/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Validate request body
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide both username and password'
+      });
+    }
+
+    // Check hardcoded admin credentials
+    if (username === 'qwerty' && password === '123') {
+      // Generate admin token
+      const payload = {
+        user: {
+          id: 'admin',
+          role: 'admin',
+          username: username
+        }
+      };
+
+      const token = jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        { 
+          expiresIn: '24h',
+          algorithm: 'HS256'
+        }
+      );
+
+      res.json({
+        success: true,
+        message: 'Admin login successful',
+        token,
+        user: {
+          username: username,
+          role: 'admin'
+        }
+      });
+    } else {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid admin credentials'
+      });
+    }
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during admin login'
     });
   }
 });

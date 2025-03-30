@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './NavBar.css';
 import logo from '../assets/studybuddylogo.png';
 import { useAuth } from '../context/AuthContext';
 import defaultProfile from '../assets/default-profile.png';
-import { FaComments, FaUserShield, FaTimes, FaLock } from 'react-icons/fa';
+import { FaComments, FaUserShield, FaTimes, FaLock, FaBell } from 'react-icons/fa';
 
 function NavBar() {
   const location = useLocation();
@@ -16,6 +16,14 @@ function NavBar() {
   const [adminCredentials, setAdminCredentials] = useState({ username: '', password: '' });
   const [adminLoginError, setAdminLoginError] = useState('');
   
+  // Add notification count state
+  const [notificationCount, setNotificationCount] = useState(3);
+  
+  // Log authentication status for debugging
+  useEffect(() => {
+    console.log("Auth status:", isAuthenticated);
+  }, [isAuthenticated]);
+  
   // Handle admin login form input changes
   const handleAdminInputChange = (e) => {
     const { name, value } = e.target;
@@ -26,17 +34,32 @@ function NavBar() {
   };
   
   // Handle admin login
-  const handleAdminLogin = (e) => {
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
+    setAdminLoginError('');
     
-    // Check hardcoded credentials
-    if (adminCredentials.username === 'qwerty' && adminCredentials.password === '123') {
-      setShowAdminModal(false);
-      setAdminCredentials({ username: '', password: '' });
-      setAdminLoginError('');
-      navigate('/admin');
-    } else {
-      setAdminLoginError('Invalid username or password');
+    try {
+      const response = await fetch('http://localhost:5001/api/auth/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(adminCredentials)
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        localStorage.setItem('adminToken', data.token);
+        setShowAdminModal(false);
+        setAdminCredentials({ username: '', password: '' });
+        navigate('/admin');
+      } else {
+        setAdminLoginError(data.message || 'Invalid credentials');
+      }
+    } catch (error) {
+      console.error('Admin login error:', error);
+      setAdminLoginError('Failed to login. Please try again.');
     }
   };
 
@@ -87,6 +110,14 @@ function NavBar() {
           </Link>
           <Link to="/feedback" className="nav-link">Feedback</Link>
           
+          {/* Notification icon - make sure it's visible regardless of auth status for testing */}
+          <Link to="/notifications" className="nav-link notification-link">
+            <FaBell />
+            {notificationCount > 0 && (
+              <span className="notification-badge">{notificationCount}</span>
+            )}
+          </Link>
+          
           <div className="auth-links">
             {!isAuthenticated ? (
               <>
@@ -106,13 +137,6 @@ function NavBar() {
                     alt="Profile" 
                     className="profile-image" 
                   />
-                </Link>
-                <Link 
-                  to="/reviews" 
-                  className="review-button"
-                  title="View my feedback"
-                >
-                  <FaComments /> Reviews
                 </Link>
               </div>
             )}

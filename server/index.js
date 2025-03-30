@@ -4,21 +4,20 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const messagesRoutes = require('./routes/messages');
 const userRoutes = require('./routes/userRoutes');
+const path = require('path');
 require('dotenv').config();
 const rateLimit = require('express-rate-limit');
 
 const app = express();
 
-// CORS configuration
+// Middleware
+app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:3000',  // Your React app's URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  origin: 'http://localhost:3000',
   credentials: true
 }));
 
 // Make sure these are before your routes
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Add OPTIONS handling for preflight requests
@@ -30,6 +29,9 @@ app.use((req, res, next) => {
   console.log('Request Body:', req.body);
   next();
 });
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Basic test route
 app.get('/test', async (req, res) => {
@@ -65,8 +67,8 @@ const limiter = rateLimit({
 app.use('/api/auth', limiter);
 
 // Mount routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/messages', messagesRoutes);
 app.use('/api/feedback', require('./routes/feedback'));
 
@@ -122,4 +124,4 @@ connectDB().then(() => {
   });
 }).catch(error => {
   console.error('Server startup failed:', error);
-});  
+}); 

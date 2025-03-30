@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Profile.css';
 import { useAuth } from '../context/AuthContext';
-import { FaSignOutAlt, FaUserFriends, FaTrashAlt } from 'react-icons/fa';
+import { FaSignOutAlt, FaUserFriends, FaTrashAlt, FaCamera } from 'react-icons/fa';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -40,6 +40,8 @@ const Profile = () => {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
+
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // FIRST: Immediately try to get data from localStorage when component mounts
   useEffect(() => {
@@ -264,19 +266,18 @@ const Profile = () => {
     }
   };
 
-  const handleRemoveExam = () => {
+  const handleRemoveExam = async () => {
     try {
       // Remove from localStorage
       localStorage.removeItem('userExams');
       
       // Try to remove from API too
       try {
-        axios.delete('/api/auth/remove-exam', {
+        await axios.put('/api/auth/remove-exam', {}, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          },
-          data: {}
+          }
         });
       } catch (apiError) {
         console.error('API removal error (but continuing):', apiError);
@@ -387,7 +388,10 @@ const Profile = () => {
       console.log('Profile update response:', response.data);
 
       if (response.data.success) {
-        setUserData(response.data.user);
+        setUserData(prev => ({
+          ...prev,
+          ...response.data.user
+        }));
         setSuccessMessage('Profile updated successfully!');
         setShowSuccessMessage(true);
         setTimeout(() => {
@@ -443,6 +447,55 @@ const Profile = () => {
       console.error('Error deleting account:', error);
       setError(error.response?.data?.message || 'Failed to delete account. Please try again.');
       setTimeout(() => setError(null), 3000);
+    }
+  };
+
+  // Add this new function to handle profile photo upload
+  const handleProfilePhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size should be less than 5MB');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    try {
+      setUploadingPhoto(true);
+      const formData = new FormData();
+      formData.append('profilePhoto', file);
+
+      const response = await axios.put('/api/users/profile-photo', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        setUserData(prev => ({
+          ...prev,
+          profilePicture: response.data.profilePicture
+        }));
+        setSuccessMessage('Profile photo updated successfully!');
+        setShowSuccessMessage(true);
+        setTimeout(() => setShowSuccessMessage(false), 3000);
+      }
+    } catch (error) {
+      console.error('Error uploading profile photo:', error);
+      setError('Failed to upload profile photo. Please try again.');
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -516,17 +569,33 @@ const Profile = () => {
         <div className="profile-left-column">
           <div className="profile-user-info">
             <div className="profile-avatar-container">
-              {userData.profilePicture ? (
-                <img 
-                  src={userData.profilePicture} 
-                  alt={getFullName()} 
-                  className="profile-avatar" 
-                />
-              ) : (
-                <div className="profile-avatar profile-avatar-initials">
-                  {getInitials()}
-                </div>
-              )}
+              <div className="profile-avatar-wrapper">
+                {userData.profilePicture ? (
+                  <img 
+                    src={userData.profilePicture} 
+                    alt={getFullName()} 
+                    className="profile-avatar" 
+                  />
+                ) : (
+                  <div className="profile-avatar profile-avatar-initials">
+                    {getInitials()}
+                  </div>
+                )}
+                <label className="profile-photo-upload" title="Change profile photo">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePhotoChange}
+                    style={{ display: 'none' }}
+                  />
+                  <FaCamera className="camera-icon" />
+                </label>
+                {uploadingPhoto && (
+                  <div className="upload-overlay">
+                    <div className="spinner"></div>
+                  </div>
+                )}
+              </div>
             </div>
             <h3 className="profile-username">{getFullName()}</h3>
             <p className="profile-email">{userData.email || "user@example.com"}</p>

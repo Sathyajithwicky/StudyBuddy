@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Admin.css';
 import { FaUsers, FaUserGraduate, FaBookOpen, FaCalendarAlt, FaCog, FaSignOutAlt, FaBell, FaChartLine, FaTrash, FaEdit, FaFilter, FaSearch, FaTimes } from 'react-icons/fa';
 
 const Admin = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  
   // State for active tab
   const [activeTab, setActiveTab] = useState('dashboard');
   
@@ -13,14 +18,85 @@ const Admin = () => {
   // State for delete confirmation
   const [deleteConfirmGroup, setDeleteConfirmGroup] = useState(null);
   
-  // Mock data for users
-  const users = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Student', joinDate: '2023-10-15', status: 'Active' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Student', joinDate: '2023-09-22', status: 'Active' },
-    { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'Student', joinDate: '2023-11-05', status: 'Inactive' },
-    { id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'Student', joinDate: '2023-10-30', status: 'Active' },
-    { id: 5, name: 'Mike Wilson', email: 'mike@example.com', role: 'Student', joinDate: '2023-08-18', status: 'Active' },
-  ];
+  // State for users
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  
+  // Function to handle search
+  const handleSearch = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+    
+    if (!query) {
+      setFilteredUsers(users); // Users are already sorted
+      return;
+    }
+
+    const filtered = users.filter(user => 
+      user.firstName?.toLowerCase().includes(query) ||
+      user.lastName?.toLowerCase().includes(query) ||
+      user.email?.toLowerCase().includes(query) ||
+      user.university?.toLowerCase().includes(query) ||
+      user.course?.toLowerCase().includes(query)
+    );
+    
+    setFilteredUsers(filtered); // Maintain the sort order as filtered users come from sorted users
+  };
+  
+  // Fetch users from backend
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        throw new Error('No admin token found. Please log in again.');
+      }
+
+      const response = await fetch('http://localhost:5001/api/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to fetch users');
+      }
+      
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to fetch users');
+      }
+      
+      // Sort users by creation date in descending order (newest first)
+      const sortedUsers = (data.users || []).sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      
+      setUsers(sortedUsers);
+      setFilteredUsers(sortedUsers); // Initialize filtered users with sorted users
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching users:', err);
+      if (err.message.includes('token')) {
+        handleLogout();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Fetch users when the component mounts or when activeTab changes to 'users'
+  useEffect(() => {
+    if (activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [activeTab]);
   
   // Mock data for study groups with state - expanded with more normal study groups
   const [studyGroups, setStudyGroups] = useState([
@@ -49,6 +125,12 @@ const Admin = () => {
     { id: 4, user: 'Jane Smith', action: 'updated profile', time: '2 days ago' },
   ];
   
+  // Function to handle logout
+  const handleLogout = () => {
+    logout(); // Clear auth state
+    navigate('/login'); // Redirect to login page
+  };
+  
   // Function to handle editing a group
   const handleEditGroup = (group) => {
     setEditingGroup(group);
@@ -65,7 +147,7 @@ const Admin = () => {
           ? { ...group, name: newGroupName } 
           : group
       )
-    );
+      );
     
     setEditingGroup(null);
     setNewGroupName('');
@@ -122,14 +204,54 @@ const Admin = () => {
     ? studyGroups.filter(group => group.name.toLowerCase().includes(subjectFilter.toLowerCase()))
     : studyGroups;
 
+  // Function to format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Function to handle editing a user
+  const handleEditUser = (user) => {
+    console.log('Editing user:', user);
+    // TODO: Implement edit user functionality
+  };
+
+  // Function to handle deleting a user
+  const handleDeleteUser = async (user) => {
+    if (window.confirm(`Are you sure you want to delete user ${user.firstName} ${user.lastName}?`)) {
+      try {
+        const token = localStorage.getItem('adminToken');
+        const response = await fetch(`http://localhost:5001/api/users/account`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete user');
+        }
+
+        // Refresh the users list
+        fetchUsers();
+      } catch (err) {
+        setError(err.message);
+        console.error('Error deleting user:', err);
+      }
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       {/* Admin sidebar */}
       <div className="admin-sidebar">
         <div className="admin-sidebar-header">
           <h2>Admin Panel</h2>
-        </div>
-        
+      </div>
+
         <div className="admin-sidebar-menu">
           <button 
             className={`admin-sidebar-item ${activeTab === 'dashboard' ? 'active' : ''}`}
@@ -137,7 +259,7 @@ const Admin = () => {
           >
             <FaChartLine /> Dashboard
           </button>
-          <button 
+          <button
             className={`admin-sidebar-item ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
           >
@@ -149,29 +271,29 @@ const Admin = () => {
           >
             <FaUserGraduate /> Study Groups
           </button>
-          <button 
+          <button
             className={`admin-sidebar-item ${activeTab === 'content' ? 'active' : ''}`}
             onClick={() => setActiveTab('content')}
           >
             <FaBookOpen /> Content
           </button>
-          <button 
+          <button
             className={`admin-sidebar-item ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
           >
             <FaCog /> Settings
           </button>
         </div>
-        
+
         <div className="admin-sidebar-footer">
-          <button className="admin-logout-btn">
+          <button className="admin-logout-btn" onClick={handleLogout}>
             <FaSignOutAlt /> Logout
           </button>
         </div>
       </div>
       
       {/* Admin main content */}
-      <div className="admin-main">
+        <div className="admin-main">
         {/* Admin header */}
         <div className="admin-header">
           <div className="admin-header-title">
@@ -291,69 +413,75 @@ const Admin = () => {
             </div>
           )}
           
+          {/* Users Tab Content */}
           {activeTab === 'users' && (
-            <div className="users-content">
-              <div className="users-actions">
-                <button className="add-user-btn">Add New User</button>
-                <div className="users-filters">
-                  <button className="filter-btn"><FaFilter /> Filter</button>
-                  <select className="role-filter">
-                    <option value="">All Roles</option>
-                    <option value="student">Student</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                  <select className="status-filter">
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
+            <div className="admin-content">
+              <div className="admin-section-header">
+                <h2>User Management</h2>
+                <div className="admin-section-actions">
+                  <div className="search-bar">
+                    <FaSearch className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search users..."
+                      className="search-input"
+                      value={searchQuery}
+                      onChange={handleSearch}
+                    />
+                  </div>
                 </div>
               </div>
               
-              <div className="users-table">
-                <table>
+              {loading ? (
+                <div className="loading-message">Loading users...</div>
+              ) : error ? (
+                <div className="error-message">{error}</div>
+              ) : (
+                <div className="users-table-container">
+                  <table className="users-table">
                   <thead>
                     <tr>
-                      <th>ID</th>
                       <th>Name</th>
                       <th>Email</th>
-                      <th>Role</th>
+                        <th>University</th>
+                        <th>Course</th>
                       <th>Join Date</th>
                       <th>Status</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map(user => (
-                      <tr key={user.id}>
-                        <td>{user.id}</td>
-                        <td>{user.name}</td>
+                      {filteredUsers.map(user => (
+                        <tr key={user._id}>
+                          <td>{`${user.firstName} ${user.lastName}`}</td>
                         <td>{user.email}</td>
-                        <td>{user.role}</td>
-                        <td>{user.joinDate}</td>
+                          <td>{user.university}</td>
+                          <td>{user.course}</td>
+                          <td>{formatDate(user.createdAt)}</td>
                         <td>
-                          <span className={`status-badge ${user.status.toLowerCase()}`}>
-                            {user.status}
+                            <span className={`status-badge ${user.status?.toLowerCase() || 'active'}`}>
+                              {user.status || 'Active'}
                           </span>
                         </td>
                         <td className="action-buttons">
-                          <button className="edit-btn"><FaEdit /></button>
-                          <button className="delete-btn"><FaTrash /></button>
+                            <button className="edit-btn" onClick={() => handleEditUser(user)}>
+                              <FaEdit />
+                            </button>
+                            <button className="delete-btn" onClick={() => handleDeleteUser(user)}>
+                              <FaTrash />
+                            </button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                  {filteredUsers.length === 0 && (
+                    <div className="no-results">
+                      <p>No users found matching your search criteria.</p>
               </div>
-              
-              <div className="pagination">
-                <button>&laquo;</button>
-                <button className="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button>&raquo;</button>
+                  )}
               </div>
+              )}
             </div>
           )}
           
@@ -403,20 +531,20 @@ const Admin = () => {
                     <div className="group-card-header">
                       <h3>{group.name}</h3>
                       <div className="group-actions">
-                        <button 
+                <button 
                           className="edit-btn" 
                           onClick={() => handleEditGroup(group)}
                           title="Edit group name"
-                        >
+                >
                           <FaEdit />
-                        </button>
-                        <button 
+                </button>
+                <button 
                           className="delete-btn" 
                           onClick={() => handleConfirmDelete(group)}
                           title="Delete group"
-                        >
+                >
                           <FaTrash />
-                        </button>
+                </button>
                       </div>
                     </div>
                     <div className="group-card-body">
@@ -445,12 +573,12 @@ const Admin = () => {
               {filteredGroups.length === 0 && (
                 <div className="no-results">
                   <p>No study groups match your filter criteria.</p>
-                  <button 
+                <button 
                     className="reset-filter-btn"
                     onClick={() => setSubjectFilter('')}
                   >
                     Reset Filters
-                  </button>
+                </button>
                 </div>
               )}
             </div>
@@ -466,58 +594,58 @@ const Admin = () => {
               </div>
               
               <div className="content-panel">
-                <div className="content-header">
-                  <h3>Quiz Management</h3>
-                  <button className="add-content-btn">Add New Quiz</button>
-                </div>
-                
-                <div className="content-list">
-                  <div className="content-item">
-                    <div className="content-info">
-                      <h4>Physics Mechanics Quiz</h4>
-                      <div className="content-meta">
-                        <span>Created: Oct 15, 2023</span>
-                        <span>Questions: 25</span>
-                        <span>Difficulty: Advanced</span>
+                    <div className="content-header">
+                      <h3>Quiz Management</h3>
+                      <button className="add-content-btn">Add New Quiz</button>
+                    </div>
+                    
+                    <div className="content-list">
+                      <div className="content-item">
+                        <div className="content-info">
+                          <h4>Physics Mechanics Quiz</h4>
+                          <div className="content-meta">
+                            <span>Created: Oct 15, 2023</span>
+                            <span>Questions: 25</span>
+                            <span>Difficulty: Advanced</span>
+                          </div>
+                        </div>
+                        <div className="content-actions">
+                          <button className="edit-btn"><FaEdit /></button>
+                          <button className="delete-btn"><FaTrash /></button>
+                        </div>
+                      </div>
+                      
+                      <div className="content-item">
+                        <div className="content-info">
+                          <h4>Chemistry Organic Compounds</h4>
+                          <div className="content-meta">
+                            <span>Created: Nov 2, 2023</span>
+                            <span>Questions: 20</span>
+                            <span>Difficulty: Intermediate</span>
+                          </div>
+                        </div>
+                        <div className="content-actions">
+                          <button className="edit-btn"><FaEdit /></button>
+                          <button className="delete-btn"><FaTrash /></button>
+                        </div>
+                      </div>
+                      
+                      <div className="content-item">
+                        <div className="content-info">
+                          <h4>Biology Cell Structure</h4>
+                          <div className="content-meta">
+                            <span>Created: Oct 28, 2023</span>
+                            <span>Questions: 15</span>
+                            <span>Difficulty: Beginner</span>
+                          </div>
+                        </div>
+                        <div className="content-actions">
+                          <button className="edit-btn"><FaEdit /></button>
+                          <button className="delete-btn"><FaTrash /></button>
+                        </div>
                       </div>
                     </div>
-                    <div className="content-actions">
-                      <button className="edit-btn"><FaEdit /></button>
-                      <button className="delete-btn"><FaTrash /></button>
                     </div>
-                  </div>
-                  
-                  <div className="content-item">
-                    <div className="content-info">
-                      <h4>Chemistry Organic Compounds</h4>
-                      <div className="content-meta">
-                        <span>Created: Nov 2, 2023</span>
-                        <span>Questions: 20</span>
-                        <span>Difficulty: Intermediate</span>
-                      </div>
-                    </div>
-                    <div className="content-actions">
-                      <button className="edit-btn"><FaEdit /></button>
-                      <button className="delete-btn"><FaTrash /></button>
-                    </div>
-                  </div>
-                  
-                  <div className="content-item">
-                    <div className="content-info">
-                      <h4>Biology Cell Structure</h4>
-                      <div className="content-meta">
-                        <span>Created: Oct 28, 2023</span>
-                        <span>Questions: 15</span>
-                        <span>Difficulty: Beginner</span>
-                      </div>
-                    </div>
-                    <div className="content-actions">
-                      <button className="edit-btn"><FaEdit /></button>
-                      <button className="delete-btn"><FaTrash /></button>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
           
@@ -674,4 +802,4 @@ const Admin = () => {
   );
 };
 
-export default Admin; 
+export default Admin;
