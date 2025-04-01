@@ -100,7 +100,13 @@ const Login = () => {
       const message = error.response?.data?.message || 'An error occurred during login';
       setErrorMessage(message);
       setShowErrorPopup(true);
-      setTimeout(() => setShowErrorPopup(false), 3000);
+      
+      // If account is inactive, show a more prominent error message
+      if (error.response?.data?.message?.includes('Account is inactive')) {
+        setErrorMessage('Your account has been deactivated. Please contact support for assistance.');
+      }
+      
+      setTimeout(() => setShowErrorPopup(false), 5000); // Show error for longer when account is inactive
     } finally {
       setIsLoading(false);
     }

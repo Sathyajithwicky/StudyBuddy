@@ -210,11 +210,145 @@ router.get('/', auth, async (req, res) => {
         profilePicture: user.profilePicture,
         createdAt: user.createdAt,
         examName: user.examName,
-        examDate: user.examDate
+        examDate: user.examDate,
+        status: user.status || 'active'
       }))
     });
   } catch (error) {
     console.error('Error fetching users:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+});
+
+// @route   PUT api/users/:id
+// @desc    Update user by ID (Admin only)
+// @access  Private (Admin only)
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { firstName, lastName, email, university, course } = req.body;
+    const userId = req.params.id;
+
+    // Find user and update
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+
+    // Update fields if provided
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (email) user.email = email;
+    if (university) user.university = university;
+    if (course) user.course = course;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'User updated successfully',
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        university: user.university,
+        course: user.course,
+        profilePicture: user.profilePicture,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+});
+
+// @route   DELETE api/users/:id
+// @desc    Delete user by ID (Admin only)
+// @access  Private (Admin only)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    
+    // Find and delete the user
+    const user = await User.findByIdAndDelete(userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'User deleted successfully' 
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+});
+
+// @route   PUT api/users/:id/status
+// @desc    Update user status (Admin only)
+// @access  Private (Admin only)
+router.put('/:id/status', auth, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const userId = req.params.id;
+
+    if (!['active', 'inactive'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value. Must be either "active" or "inactive"'
+      });
+    }
+
+    // Find user and update status
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+
+    user.status = status;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'User status updated successfully',
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        university: user.university,
+        course: user.course,
+        profilePicture: user.profilePicture,
+        createdAt: user.createdAt,
+        status: user.status
+      }
+    });
+  } catch (error) {
+    console.error('Error updating user status:', error);
     res.status(500).json({ 
       success: false,
       message: 'Server error', 

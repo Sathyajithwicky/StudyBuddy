@@ -22,8 +22,24 @@ const Admin = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
+  
+  // State for editing user
+  const [editingUser, setEditingUser] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    university: '',
+    course: ''
+  });
+
+  // State for delete confirmation
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   
   // Function to handle search
   const handleSearch = (e) => {
@@ -63,23 +79,24 @@ const Admin = () => {
         }
       });
       
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to fetch users');
-      }
-      
       const data = await response.json();
+      
       if (!data.success) {
         throw new Error(data.message || 'Failed to fetch users');
       }
       
+      if (!Array.isArray(data.users)) {
+        throw new Error('Invalid users data format');
+      }
+      
       // Sort users by creation date in descending order (newest first)
-      const sortedUsers = (data.users || []).sort((a, b) => 
+      const sortedUsers = data.users.sort((a, b) => 
         new Date(b.createdAt) - new Date(a.createdAt)
       );
       
       setUsers(sortedUsers);
-      setFilteredUsers(sortedUsers); // Initialize filtered users with sorted users
+      setFilteredUsers(sortedUsers);
+      setError(null);
     } catch (err) {
       setError(err.message);
       console.error('Error fetching users:', err);
@@ -215,32 +232,181 @@ const Admin = () => {
 
   // Function to handle editing a user
   const handleEditUser = (user) => {
-    console.log('Editing user:', user);
-    // TODO: Implement edit user functionality
+    console.log('User to edit:', user); // Debug log
+    if (!user || !user.id) {
+      setError('Invalid user data');
+      return;
+    }
+    setEditingUser(user);
+    setEditFormData({
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || '',
+      university: user.university || '',
+      course: user.course || ''
+    });
+    setShowEditModal(true);
+    setError(null); // Clear any previous errors
+  };
+
+  // Function to handle edit form changes
+  const handleEditFormChange = (e) => {
+    setEditFormData({
+      ...editFormData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  // Function to handle edit form submission
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      const token = localStorage.getItem('adminToken');
+      
+      if (!editingUser || !editingUser.id) {
+        throw new Error('Invalid user data');
+      }
+
+      const response = await fetch(`http://localhost:5001/api/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          firstName: editFormData.firstName,
+          lastName: editFormData.lastName,
+          email: editFormData.email,
+          university: editFormData.university,
+          course: editFormData.course
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update user');
+      }
+
+      // Update the users list with the edited user
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === editingUser.id ? { ...user, ...editFormData } : user
+        )
+      );
+
+      // Update filtered users as well
+      setFilteredUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === editingUser.id ? { ...user, ...editFormData } : user
+        )
+      );
+
+      setShowEditModal(false);
+      setEditingUser(null);
+      setSuccessMessage('User updated successfully');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error updating user:', err);
+    }
   };
 
   // Function to handle deleting a user
-  const handleDeleteUser = async (user) => {
-    if (window.confirm(`Are you sure you want to delete user ${user.firstName} ${user.lastName}?`)) {
-      try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch(`http://localhost:5001/api/users/account`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+  const handleDeleteUser = (user) => {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
 
-        if (!response.ok) {
-          throw new Error('Failed to delete user');
+  // Function to confirm user deletion
+  const confirmDeleteUser = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`http://localhost:5001/api/users/${userToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
+      });
 
-        // Refresh the users list
-        fetchUsers();
-      } catch (err) {
-        setError(err.message);
-        console.error('Error deleting user:', err);
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
       }
+
+      // Remove the user from the lists
+      setUsers(prevUsers => prevUsers.filter(u => u.id !== userToDelete.id));
+      setFilteredUsers(prevUsers => prevUsers.filter(u => u.id !== userToDelete.id));
+      setSuccessMessage('User deleted successfully');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error deleting user:', err);
+    } finally {
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+    }
+  };
+
+  // Function to cancel user deletion
+  const cancelDeleteUser = () => {
+    setShowDeleteModal(false);
+    setUserToDelete(null);
+  };
+
+  // Function to handle user status toggle
+  const handleStatusToggle = async (user) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const newStatus = user.status === 'active' ? 'inactive' : 'active';
+      
+      const response = await fetch(`http://localhost:5001/api/users/${user.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update user status');
+      }
+
+      // Update the users list with the updated status
+      setUsers(prevUsers => 
+        prevUsers.map(u => 
+          u.id === user.id ? { ...u, status: newStatus } : u
+        )
+      );
+
+      // Update filtered users as well
+      setFilteredUsers(prevUsers => 
+        prevUsers.map(u => 
+          u.id === user.id ? { ...u, status: newStatus } : u
+        )
+      );
+
+      setSuccessMessage(`User status updated to ${newStatus}`);
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error updating user status:', err);
     }
   };
 
@@ -432,10 +598,20 @@ const Admin = () => {
                 </div>
               </div>
               
+              {successMessage && (
+                <div className="success-message">
+                  {successMessage}
+                </div>
+              )}
+              
+              {error && (
+                <div className="error-message">
+                  {error}
+                </div>
+              )}
+              
               {loading ? (
                 <div className="loading-message">Loading users...</div>
-              ) : error ? (
-                <div className="error-message">{error}</div>
               ) : (
                 <div className="users-table-container">
                   <table className="users-table">
@@ -443,33 +619,45 @@ const Admin = () => {
                     <tr>
                       <th>Name</th>
                       <th>Email</th>
-                        <th>University</th>
-                        <th>Course</th>
+                      <th>University</th>
+                      <th>Course</th>
                       <th>Join Date</th>
                       <th>Status</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                      {filteredUsers.map(user => (
-                        <tr key={user._id}>
-                          <td>{`${user.firstName} ${user.lastName}`}</td>
+                    {filteredUsers.map(user => (
+                      <tr key={user.id}>
+                        <td>{`${user.firstName} ${user.lastName}`}</td>
                         <td>{user.email}</td>
-                          <td>{user.university}</td>
-                          <td>{user.course}</td>
-                          <td>{formatDate(user.createdAt)}</td>
+                        <td>{user.university}</td>
+                        <td>{user.course}</td>
+                        <td>{formatDate(user.createdAt)}</td>
                         <td>
-                            <span className={`status-badge ${user.status?.toLowerCase() || 'active'}`}>
-                              {user.status || 'Active'}
-                          </span>
+                          <button
+                            className={`status-toggle ${user.status || 'active'}`}
+                            onClick={() => handleStatusToggle(user)}
+                            title={`Click to ${user.status === 'active' ? 'deactivate' : 'activate'} user`}
+                          >
+                            {user.status || 'active'}
+                          </button>
                         </td>
                         <td className="action-buttons">
-                            <button className="edit-btn" onClick={() => handleEditUser(user)}>
-                              <FaEdit />
-                            </button>
-                            <button className="delete-btn" onClick={() => handleDeleteUser(user)}>
-                              <FaTrash />
-                            </button>
+                          <button 
+                            className="edit-btn" 
+                            onClick={() => handleEditUser(user)}
+                            title="Edit user"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button 
+                            className="delete-btn" 
+                            onClick={() => handleDeleteUser(user)}
+                            title="Delete user"
+                          >
+                            <FaTrash />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -478,7 +666,7 @@ const Admin = () => {
                   {filteredUsers.length === 0 && (
                     <div className="no-results">
                       <p>No users found matching your search criteria.</p>
-              </div>
+                </div>
                   )}
               </div>
               )}
@@ -791,6 +979,108 @@ const Admin = () => {
               <button 
                 className="cancel-btn" 
                 onClick={handleCancelDelete}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <h2>Edit User</h2>
+            <form onSubmit={handleEditSubmit}>
+              <div className="form-group">
+                <label>First Name</label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={editFormData.firstName}
+                  onChange={handleEditFormChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={editFormData.lastName}
+                  onChange={handleEditFormChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={editFormData.email}
+                  onChange={handleEditFormChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>University</label>
+                <input
+                  type="text"
+                  name="university"
+                  value={editFormData.university}
+                  onChange={handleEditFormChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Course</label>
+                <input
+                  type="text"
+                  name="course"
+                  value={editFormData.course}
+                  onChange={handleEditFormChange}
+                />
+              </div>
+              <div className="modal-buttons">
+                <button type="submit" className="save-btn">Save Changes</button>
+                <button 
+                  type="button" 
+                  className="cancel-btn"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingUser(null);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      {showDeleteModal && userToDelete && (
+        <div className="modal-overlay">
+          <div className="modal-container delete-modal">
+            <div className="modal-header">
+              <h2>Confirm Delete User</h2>
+              <button className="close-modal" onClick={cancelDeleteUser}><FaTimes /></button>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to delete the user "{userToDelete.firstName} {userToDelete.lastName}"?</p>
+              <p className="warning-text">This action cannot be undone. The user will lose access to their account and all associated data.</p>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="delete-confirm-btn" 
+                onClick={confirmDeleteUser}
+              >
+                Delete User
+              </button>
+              <button 
+                className="cancel-btn" 
+                onClick={cancelDeleteUser}
               >
                 Cancel
               </button>
