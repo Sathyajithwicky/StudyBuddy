@@ -119,7 +119,7 @@ function SignUp() {
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         await login(response.data.user, response.data.token);
-        navigate('/dashboard');
+        navigate('/');
       }
     } catch (error) {
       setErrors({
