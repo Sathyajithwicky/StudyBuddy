@@ -54,10 +54,10 @@ StudyBuddy is a modern platform designed to help students collaborate, prepare f
 ---
 
 🤝 Contributors
-Sandeep M M - IT22221100
-Sarathchandra N.H.T.S - IT22343666
-Aluthge T D - IT22131638
-Wickramasingha S - IT22222336
+- Sandeep M M - IT22221100
+- Sarathchandra N.H.T.S - IT22343666
+- Aluthge T D - IT22131638
+- Wickramasingha S - IT22222336
 
 
 
