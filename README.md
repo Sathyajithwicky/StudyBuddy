@@ -36,8 +36,8 @@ StudyBuddy is a modern platform designed to help students collaborate, prepare f
 - MongoDB running locally or MongoDB Atlas account
 
 ### Clone the Repository
--git clone https://github.com/Sathyajithwicky/StudyBuddy.git
--cd StudyBuddy
+- git clone https://github.com/Sathyajithwicky/StudyBuddy.git
+- cd StudyBuddy
 
 ---
 
