@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Admin.css';
-import { FaUsers, FaUserGraduate, FaBookOpen, FaCalendarAlt, FaCog, FaSignOutAlt, FaBell, FaChartLine, FaTrash, FaEdit, FaFilter, FaSearch, FaTimes } from 'react-icons/fa';
+import { FaUsers, FaUserGraduate, FaBookOpen, FaCalendarAlt, FaCog, FaSignOutAlt, FaBell, FaChartLine, FaTrash, FaEdit, FaFilter, FaSearch, FaTimes, FaFilePdf } from 'react-icons/fa';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -11,12 +13,18 @@ const Admin = () => {
   // State for active tab
   const [activeTab, setActiveTab] = useState('dashboard');
   
-  // State for editing study group
+  // State for study groups
+  const [studyGroups, setStudyGroups] = useState([
+    { id: 1, name: 'Physics Group A', members: 24, created: '2023-09-10', lastActive: '2023-11-28' },
+    { id: 2, name: 'Chemistry Club', members: 18, created: '2023-10-05', lastActive: '2023-11-27' },
+    { id: 3, name: 'Biology Study Circle', members: 32, created: '2023-08-20', lastActive: '2023-11-29' },
+    { id: 4, name: 'Mathematics Masters', members: 15, created: '2023-07-15', lastActive: '2023-11-25' },
+    { id: 5, name: 'Advanced Level Physics', members: 28, created: '2023-06-12', lastActive: '2023-11-30' },
+  ]);
   const [editingGroup, setEditingGroup] = useState(null);
   const [newGroupName, setNewGroupName] = useState('');
-  
-  // State for delete confirmation
   const [deleteConfirmGroup, setDeleteConfirmGroup] = useState(null);
+  const [subjectFilter, setSubjectFilter] = useState('');
   
   // State for users
   const [users, setUsers] = useState([]);
@@ -40,14 +48,29 @@ const Admin = () => {
   // State for delete confirmation
   const [userToDelete, setUserToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  
+
+  // Helper function to format dates
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Function to handle logout
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   // Function to handle search
   const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
     
     if (!query) {
-      setFilteredUsers(users); // Users are already sorted
+      setFilteredUsers(users);
       return;
     }
 
@@ -59,9 +82,83 @@ const Admin = () => {
       user.course?.toLowerCase().includes(query)
     );
     
-    setFilteredUsers(filtered); // Maintain the sort order as filtered users come from sorted users
+    setFilteredUsers(filtered);
   };
-  
+
+  // Function to generate PDF report
+  const generateUsersPDF = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.setTextColor(41, 128, 185);
+    doc.text('User Management Report', 105, 15, { align: 'center' });
+    
+    // Add date and filter info
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: 'center' });
+    
+    if (searchQuery) {
+      doc.text(`Filter: "${searchQuery}"`, 105, 27, { align: 'center' });
+    }
+    
+    // Prepare table data
+    const tableData = filteredUsers.map(user => [
+      `${user.firstName} ${user.lastName}`,
+      user.email,
+      user.university || 'N/A',
+      user.course || 'N/A',
+      formatDate(user.createdAt),
+      user.status || 'active'
+    ]);
+    
+    // Table headers
+    const headers = [['Name', 'Email', 'University', 'Course', 'Join Date', 'Status']];
+    
+    // Add the table
+    autoTable(doc, {
+      head: headers,
+      body: tableData,
+      startY: 35,
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+        overflow: 'linebreak',
+        textColor: [0, 0, 0]
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontSize: 9,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 15 }
+      },
+      margin: { top: 40 }
+    });
+    
+    // Add footer with page numbers
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.text(`Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+    }
+    
+    // Save the PDF
+    doc.save(`users_report_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
   // Fetch users from backend
   const fetchUsers = async () => {
     try {
@@ -108,32 +205,6 @@ const Admin = () => {
     }
   };
   
-  // Fetch users when the component mounts or when activeTab changes to 'users'
-  useEffect(() => {
-    if (activeTab === 'users') {
-      fetchUsers();
-    }
-  }, [activeTab]);
-  
-  // Mock data for study groups with state - expanded with more normal study groups
-  const [studyGroups, setStudyGroups] = useState([
-    { id: 1, name: 'Physics Group A', members: 24, created: '2023-09-10', lastActive: '2023-11-28' },
-    { id: 2, name: 'Chemistry Club', members: 18, created: '2023-10-05', lastActive: '2023-11-27' },
-    { id: 3, name: 'Biology Study Circle', members: 32, created: '2023-08-20', lastActive: '2023-11-29' },
-    { id: 4, name: 'Mathematics Masters', members: 15, created: '2023-07-15', lastActive: '2023-11-25' },
-    { id: 5, name: 'Advanced Level Physics', members: 28, created: '2023-06-12', lastActive: '2023-11-30' },
-    { id: 6, name: 'Organic Chemistry Group', members: 16, created: '2023-07-25', lastActive: '2023-11-28' },
-    { id: 7, name: 'Combined Mathematics', members: 22, created: '2023-08-05', lastActive: '2023-11-29' },
-    { id: 8, name: 'Molecular Biology Study', members: 19, created: '2023-09-18', lastActive: '2023-11-26' },
-    { id: 9, name: 'Mechanics & Thermodynamics', members: 21, created: '2023-05-30', lastActive: '2023-11-27' },
-    { id: 10, name: 'Calculus Group', members: 25, created: '2023-06-22', lastActive: '2023-11-30' },
-    { id: 11, name: 'Quantum Physics', members: 14, created: '2023-07-10', lastActive: '2023-11-25' },
-    { id: 12, name: 'Cellular Biology', members: 23, created: '2023-08-15', lastActive: '2023-11-29' },
-    { id: 13, name: 'Inorganic Chemistry', members: 17, created: '2023-09-05', lastActive: '2023-11-28' },
-    { id: 14, name: 'Statistics & Probability', members: 20, created: '2023-10-10', lastActive: '2023-11-27' },
-    { id: 15, name: 'Algebra & Geometry', members: 26, created: '2023-05-15', lastActive: '2023-11-30' },
-  ]);
-  
   // Mock data for recent activities
   const recentActivities = [
     { id: 1, user: 'John Doe', action: 'joined Physics Group A', time: '2 hours ago' },
@@ -141,98 +212,9 @@ const Admin = () => {
     { id: 3, user: 'Mike Wilson', action: 'submitted feedback', time: '1 day ago' },
     { id: 4, user: 'Jane Smith', action: 'updated profile', time: '2 days ago' },
   ];
-  
-  // Function to handle logout
-  const handleLogout = () => {
-    logout(); // Clear auth state
-    navigate('/login'); // Redirect to login page
-  };
-  
-  // Function to handle editing a group
-  const handleEditGroup = (group) => {
-    setEditingGroup(group);
-    setNewGroupName(group.name);
-  };
-  
-  // Function to save edited group name
-  const handleSaveGroupName = () => {
-    if (newGroupName.trim() === '') return;
-    
-    setStudyGroups(groups => 
-      groups.map(group => 
-        group.id === editingGroup.id 
-          ? { ...group, name: newGroupName } 
-          : group
-      )
-      );
-    
-    setEditingGroup(null);
-    setNewGroupName('');
-  };
-  
-  // Function to cancel editing
-  const handleCancelEdit = () => {
-    setEditingGroup(null);
-    setNewGroupName('');
-  };
-  
-  // Function to confirm delete
-  const handleConfirmDelete = (group) => {
-    setDeleteConfirmGroup(group);
-  };
-  
-  // Function to delete group
-  const handleDeleteGroup = () => {
-    setStudyGroups(groups => 
-      groups.filter(group => group.id !== deleteConfirmGroup.id)
-    );
-    setDeleteConfirmGroup(null);
-  };
-  
-  // Function to cancel delete
-  const handleCancelDelete = () => {
-    setDeleteConfirmGroup(null);
-  };
-  
-  // Function to add a new study group
-  const handleAddGroup = () => {
-    const newGroup = {
-      id: Date.now(),
-      name: 'New Study Group',
-      members: 0,
-      created: new Date().toISOString().split('T')[0],
-      lastActive: new Date().toISOString().split('T')[0]
-    };
-    
-    setStudyGroups([...studyGroups, newGroup]);
-    handleEditGroup(newGroup); // Immediately open edit modal for the new group
-  };
-  
-  // Filter study groups by subject (for the filter dropdown)
-  const [subjectFilter, setSubjectFilter] = useState('');
-  
-  // Function to handle subject filter change
-  const handleFilterChange = (e) => {
-    setSubjectFilter(e.target.value);
-  };
-  
-  // Filter groups based on the selected subject
-  const filteredGroups = subjectFilter 
-    ? studyGroups.filter(group => group.name.toLowerCase().includes(subjectFilter.toLowerCase()))
-    : studyGroups;
-
-  // Function to format date
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
 
   // Function to handle editing a user
   const handleEditUser = (user) => {
-    console.log('User to edit:', user); // Debug log
     if (!user || !user.id) {
       setError('Invalid user data');
       return;
@@ -246,7 +228,7 @@ const Admin = () => {
       course: user.course || ''
     });
     setShowEditModal(true);
-    setError(null); // Clear any previous errors
+    setError(null);
   };
 
   // Function to handle edit form changes
@@ -290,14 +272,12 @@ const Admin = () => {
         throw new Error(data.message || 'Failed to update user');
       }
 
-      // Update the users list with the edited user
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user.id === editingUser.id ? { ...user, ...editFormData } : user
         )
       );
 
-      // Update filtered users as well
       setFilteredUsers(prevUsers => 
         prevUsers.map(user => 
           user.id === editingUser.id ? { ...user, ...editFormData } : user
@@ -308,7 +288,6 @@ const Admin = () => {
       setEditingUser(null);
       setSuccessMessage('User updated successfully');
       
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
@@ -339,12 +318,10 @@ const Admin = () => {
         throw new Error('Failed to delete user');
       }
 
-      // Remove the user from the lists
       setUsers(prevUsers => prevUsers.filter(u => u.id !== userToDelete.id));
       setFilteredUsers(prevUsers => prevUsers.filter(u => u.id !== userToDelete.id));
       setSuccessMessage('User deleted successfully');
       
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
@@ -384,14 +361,12 @@ const Admin = () => {
         throw new Error(data.message || 'Failed to update user status');
       }
 
-      // Update the users list with the updated status
       setUsers(prevUsers => 
         prevUsers.map(u => 
           u.id === user.id ? { ...u, status: newStatus } : u
         )
       );
 
-      // Update filtered users as well
       setFilteredUsers(prevUsers => 
         prevUsers.map(u => 
           u.id === user.id ? { ...u, status: newStatus } : u
@@ -400,7 +375,6 @@ const Admin = () => {
 
       setSuccessMessage(`User status updated to ${newStatus}`);
       
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
@@ -410,13 +384,83 @@ const Admin = () => {
     }
   };
 
+  // Study Group Functions
+  const handleAddGroup = () => {
+    const newGroup = {
+      id: Date.now(),
+      name: 'New Study Group',
+      members: 0,
+      created: new Date().toISOString().split('T')[0],
+      lastActive: new Date().toISOString().split('T')[0]
+    };
+    
+    setStudyGroups([...studyGroups, newGroup]);
+    handleEditGroup(newGroup);
+  };
+
+  const handleFilterChange = (e) => {
+    setSubjectFilter(e.target.value);
+  };
+
+  const handleEditGroup = (group) => {
+    setEditingGroup(group);
+    setNewGroupName(group.name);
+  };
+
+  const handleSaveGroupName = () => {
+    if (newGroupName.trim() === '') return;
+    
+    setStudyGroups(groups => 
+      groups.map(group => 
+        group.id === editingGroup.id 
+          ? { ...group, name: newGroupName } 
+          : group
+      )
+    );
+    
+    setEditingGroup(null);
+    setNewGroupName('');
+  };
+
+  const handleConfirmDelete = (group) => {
+    setDeleteConfirmGroup(group);
+  };
+
+  const handleDeleteGroup = () => {
+    setStudyGroups(groups => 
+      groups.filter(group => group.id !== deleteConfirmGroup.id)
+    );
+    setDeleteConfirmGroup(null);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmGroup(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingGroup(null);
+    setNewGroupName('');
+  };
+
+  // Filter groups based on the selected subject
+  const filteredGroups = subjectFilter 
+    ? studyGroups.filter(group => group.name.toLowerCase().includes(subjectFilter.toLowerCase()))
+    : studyGroups;
+
+  // Fetch users when the component mounts or when activeTab changes to 'users'
+  useEffect(() => {
+    if (activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [activeTab]);
+
   return (
     <div className="admin-dashboard">
       {/* Admin sidebar */}
       <div className="admin-sidebar">
         <div className="admin-sidebar-header">
           <h2>Admin Panel</h2>
-      </div>
+        </div>
 
         <div className="admin-sidebar-menu">
           <button 
@@ -459,7 +503,7 @@ const Admin = () => {
       </div>
       
       {/* Admin main content */}
-        <div className="admin-main">
+      <div className="admin-main">
         {/* Admin header */}
         <div className="admin-header">
           <div className="admin-header-title">
@@ -595,6 +639,13 @@ const Admin = () => {
                       onChange={handleSearch}
                     />
                   </div>
+                  <button 
+                    className="generate-pdf-btn"
+                    onClick={generateUsersPDF}
+                    title="Generate PDF report"
+                  >
+                    <FaFilePdf /> Generate PDF
+                  </button>
                 </div>
               </div>
               
@@ -615,68 +666,71 @@ const Admin = () => {
               ) : (
                 <div className="users-table-container">
                   <table className="users-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>University</th>
-                      <th>Course</th>
-                      <th>Join Date</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredUsers.map(user => (
-                      <tr key={user.id}>
-                        <td>{`${user.firstName} ${user.lastName}`}</td>
-                        <td>{user.email}</td>
-                        <td>{user.university}</td>
-                        <td>{user.course}</td>
-                        <td>{formatDate(user.createdAt)}</td>
-                        <td>
-                          <button
-                            className={`status-toggle ${user.status || 'active'}`}
-                            onClick={() => handleStatusToggle(user)}
-                            title={`Click to ${user.status === 'active' ? 'deactivate' : 'activate'} user`}
-                          >
-                            {user.status || 'active'}
-                          </button>
-                        </td>
-                        <td className="action-buttons">
-                          <button 
-                            className="edit-btn" 
-                            onClick={() => handleEditUser(user)}
-                            title="Edit user"
-                          >
-                            <FaEdit />
-                          </button>
-                          <button 
-                            className="delete-btn" 
-                            onClick={() => handleDeleteUser(user)}
-                            title="Delete user"
-                          >
-                            <FaTrash />
-                          </button>
-                        </td>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>University</th>
+                        <th>Course</th>
+                        <th>Join Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.map(user => (
+                        <tr key={user.id}>
+                          <td>{`${user.firstName} ${user.lastName}`}</td>
+                          <td>{user.email}</td>
+                          <td>{user.university}</td>
+                          <td>{user.course}</td>
+                          <td>{formatDate(user.createdAt)}</td>
+                          <td>
+                            <button
+                              className={`status-toggle ${user.status || 'active'}`}
+                              onClick={() => handleStatusToggle(user)}
+                              title={`Click to ${user.status === 'active' ? 'deactivate' : 'activate'} user`}
+                            >
+                              {user.status || 'active'}
+                            </button>
+                          </td>
+                          <td className="action-buttons">
+                            <button 
+                              className="edit-btn" 
+                              onClick={() => handleEditUser(user)}
+                              title="Edit user"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button 
+                              className="delete-btn" 
+                              onClick={() => handleDeleteUser(user)}
+                              title="Delete user"
+                            >
+                              <FaTrash />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                   {filteredUsers.length === 0 && (
                     <div className="no-results">
                       <p>No users found matching your search criteria.</p>
-                </div>
+                    </div>
                   )}
-              </div>
+                </div>
               )}
             </div>
           )}
           
+          {/* Study Groups Tab Content */}
           {activeTab === 'study-groups' && (
             <div className="study-groups-content">
               <div className="group-actions">
-                <button className="add-group-btn" onClick={handleAddGroup}>Create New Group</button>
+                <button className="add-group-btn" onClick={handleAddGroup}>
+                  Create New Group
+                </button>
                 <div className="group-filters">
                   <button className="filter-btn"><FaFilter /> Filter</button>
                   <select 
@@ -689,9 +743,6 @@ const Admin = () => {
                     <option value="chemistry">Chemistry</option>
                     <option value="biology">Biology</option>
                     <option value="mathematics">Mathematics</option>
-                    <option value="calculus">Calculus</option>
-                    <option value="organic">Organic Chemistry</option>
-                    <option value="molecular">Molecular Biology</option>
                   </select>
                 </div>
               </div>
@@ -719,20 +770,20 @@ const Admin = () => {
                     <div className="group-card-header">
                       <h3>{group.name}</h3>
                       <div className="group-actions">
-                <button 
+                        <button 
                           className="edit-btn" 
                           onClick={() => handleEditGroup(group)}
                           title="Edit group name"
-                >
+                        >
                           <FaEdit />
-                </button>
-                <button 
+                        </button>
+                        <button 
                           className="delete-btn" 
                           onClick={() => handleConfirmDelete(group)}
                           title="Delete group"
-                >
+                        >
                           <FaTrash />
-                </button>
+                        </button>
                       </div>
                     </div>
                     <div className="group-card-body">
@@ -761,17 +812,18 @@ const Admin = () => {
               {filteredGroups.length === 0 && (
                 <div className="no-results">
                   <p>No study groups match your filter criteria.</p>
-                <button 
+                  <button 
                     className="reset-filter-btn"
                     onClick={() => setSubjectFilter('')}
                   >
                     Reset Filters
-                </button>
+                  </button>
                 </div>
               )}
             </div>
           )}
           
+          {/* Content Tab */}
           {activeTab === 'content' && (
             <div className="content-management">
               <div className="content-tabs">
@@ -782,61 +834,47 @@ const Admin = () => {
               </div>
               
               <div className="content-panel">
-                    <div className="content-header">
-                      <h3>Quiz Management</h3>
-                      <button className="add-content-btn">Add New Quiz</button>
-                    </div>
-                    
-                    <div className="content-list">
-                      <div className="content-item">
-                        <div className="content-info">
-                          <h4>Physics Mechanics Quiz</h4>
-                          <div className="content-meta">
-                            <span>Created: Oct 15, 2023</span>
-                            <span>Questions: 25</span>
-                            <span>Difficulty: Advanced</span>
-                          </div>
-                        </div>
-                        <div className="content-actions">
-                          <button className="edit-btn"><FaEdit /></button>
-                          <button className="delete-btn"><FaTrash /></button>
-                        </div>
-                      </div>
-                      
-                      <div className="content-item">
-                        <div className="content-info">
-                          <h4>Chemistry Organic Compounds</h4>
-                          <div className="content-meta">
-                            <span>Created: Nov 2, 2023</span>
-                            <span>Questions: 20</span>
-                            <span>Difficulty: Intermediate</span>
-                          </div>
-                        </div>
-                        <div className="content-actions">
-                          <button className="edit-btn"><FaEdit /></button>
-                          <button className="delete-btn"><FaTrash /></button>
-                        </div>
-                      </div>
-                      
-                      <div className="content-item">
-                        <div className="content-info">
-                          <h4>Biology Cell Structure</h4>
-                          <div className="content-meta">
-                            <span>Created: Oct 28, 2023</span>
-                            <span>Questions: 15</span>
-                            <span>Difficulty: Beginner</span>
-                          </div>
-                        </div>
-                        <div className="content-actions">
-                          <button className="edit-btn"><FaEdit /></button>
-                          <button className="delete-btn"><FaTrash /></button>
-                        </div>
+                <div className="content-header">
+                  <h3>Quiz Management</h3>
+                  <button className="add-content-btn">Add New Quiz</button>
+                </div>
+                
+                <div className="content-list">
+                  <div className="content-item">
+                    <div className="content-info">
+                      <h4>Physics Mechanics Quiz</h4>
+                      <div className="content-meta">
+                        <span>Created: Oct 15, 2023</span>
+                        <span>Questions: 25</span>
+                        <span>Difficulty: Advanced</span>
                       </div>
                     </div>
+                    <div className="content-actions">
+                      <button className="edit-btn"><FaEdit /></button>
+                      <button className="delete-btn"><FaTrash /></button>
                     </div>
+                  </div>
+                  
+                  <div className="content-item">
+                    <div className="content-info">
+                      <h4>Chemistry Organic Compounds</h4>
+                      <div className="content-meta">
+                        <span>Created: Nov 2, 2023</span>
+                        <span>Questions: 20</span>
+                        <span>Difficulty: Intermediate</span>
+                      </div>
+                    </div>
+                    <div className="content-actions">
+                      <button className="edit-btn"><FaEdit /></button>
+                      <button className="delete-btn"><FaTrash /></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
           
+          {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div className="settings-content">
               <div className="settings-panel">
@@ -854,40 +892,6 @@ const Admin = () => {
                       <textarea rows="2" defaultValue="A collaborative learning platform for students" />
                     </div>
                   </div>
-                  <div className="setting-item">
-                    <div className="setting-label">Maintenance Mode</div>
-                    <div className="setting-input">
-                      <label className="toggle-switch">
-                        <input type="checkbox" />
-                        <span className="toggle-slider"></span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="settings-section">
-                  <h3>Email Settings</h3>
-                  <div className="setting-item">
-                    <div className="setting-label">SMTP Server</div>
-                    <div className="setting-input">
-                      <input type="text" defaultValue="smtp.example.com" />
-                    </div>
-                  </div>
-                  <div className="setting-item">
-                    <div className="setting-label">SMTP Port</div>
-                    <div className="setting-input">
-                      <input type="text" defaultValue="587" />
-                    </div>
-                  </div>
-                  <div className="setting-item">
-                    <div className="setting-label">Send Notification Emails</div>
-                    <div className="setting-input">
-                      <label className="toggle-switch">
-                        <input type="checkbox" defaultChecked />
-                        <span className="toggle-slider"></span>
-                      </label>
-                    </div>
-                  </div>
                 </div>
                 
                 <div className="settings-section">
@@ -901,97 +905,27 @@ const Admin = () => {
                       </label>
                     </div>
                   </div>
-                  <div className="setting-item">
-                    <div className="setting-label">Session Timeout (minutes)</div>
-                    <div className="setting-input">
-                      <input type="number" defaultValue="30" />
-                    </div>
-                  </div>
                 </div>
                 
                 <div className="settings-actions">
                   <button className="save-settings-btn">Save Changes</button>
-                  <button className="reset-settings-btn">Reset to Default</button>
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
-      
-      {/* Edit Group Modal */}
-      {editingGroup && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <div className="modal-header">
-              <h2>Edit Study Group</h2>
-              <button className="close-modal" onClick={handleCancelEdit}><FaTimes /></button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Group Name:</label>
-                <input 
-                  type="text" 
-                  value={newGroupName} 
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                  placeholder="Enter group name"
-                />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button 
-                className="save-btn" 
-                onClick={handleSaveGroupName}
-                disabled={newGroupName.trim() === ''}
-              >
-                Save Changes
-              </button>
-              <button 
-                className="cancel-btn" 
-                onClick={handleCancelEdit}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Delete Confirmation Modal */}
-      {deleteConfirmGroup && (
-        <div className="modal-overlay">
-          <div className="modal-container delete-modal">
-            <div className="modal-header">
-              <h2>Confirm Delete</h2>
-              <button className="close-modal" onClick={handleCancelDelete}><FaTimes /></button>
-            </div>
-            <div className="modal-body">
-              <p>Are you sure you want to delete the study group "{deleteConfirmGroup.name}"?</p>
-              <p className="warning-text">This action cannot be undone.</p>
-            </div>
-            <div className="modal-footer">
-              <button 
-                className="delete-confirm-btn" 
-                onClick={handleDeleteGroup}
-              >
-                Delete
-              </button>
-              <button 
-                className="cancel-btn" 
-                onClick={handleCancelDelete}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Edit User Modal */}
       {showEditModal && (
         <div className="modal-overlay">
           <div className="modal-container">
-            <h2>Edit User</h2>
+            <div className="modal-header">
+              <h2>Edit User</h2>
+              <button className="close-modal" onClick={() => setShowEditModal(false)}>
+                <FaTimes />
+              </button>
+            </div>
             <form onSubmit={handleEditSubmit}>
               <div className="form-group">
                 <label>First Name</label>
@@ -1046,10 +980,7 @@ const Admin = () => {
                 <button 
                   type="button" 
                   className="cancel-btn"
-                  onClick={() => {
-                    setShowEditModal(false);
-                    setEditingUser(null);
-                  }}
+                  onClick={() => setShowEditModal(false)}
                 >
                   Cancel
                 </button>
@@ -1065,11 +996,13 @@ const Admin = () => {
           <div className="modal-container delete-modal">
             <div className="modal-header">
               <h2>Confirm Delete User</h2>
-              <button className="close-modal" onClick={cancelDeleteUser}><FaTimes /></button>
+              <button className="close-modal" onClick={cancelDeleteUser}>
+                <FaTimes />
+              </button>
             </div>
             <div className="modal-body">
               <p>Are you sure you want to delete the user "{userToDelete.firstName} {userToDelete.lastName}"?</p>
-              <p className="warning-text">This action cannot be undone. The user will lose access to their account and all associated data.</p>
+              <p className="warning-text">This action cannot be undone.</p>
             </div>
             <div className="modal-footer">
               <button 
@@ -1081,6 +1014,78 @@ const Admin = () => {
               <button 
                 className="cancel-btn" 
                 onClick={cancelDeleteUser}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Group Modal */}
+      {editingGroup && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h2>Edit Study Group</h2>
+              <button className="close-modal" onClick={handleCancelEdit}>
+                <FaTimes />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Group Name:</label>
+                <input 
+                  type="text" 
+                  value={newGroupName} 
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  placeholder="Enter group name"
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="save-btn" 
+                onClick={handleSaveGroupName}
+                disabled={newGroupName.trim() === ''}
+              >
+                Save Changes
+              </button>
+              <button 
+                className="cancel-btn" 
+                onClick={handleCancelEdit}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Group Confirmation Modal */}
+      {deleteConfirmGroup && (
+        <div className="modal-overlay">
+          <div className="modal-container delete-modal">
+            <div className="modal-header">
+              <h2>Confirm Delete</h2>
+              <button className="close-modal" onClick={handleCancelDelete}>
+                <FaTimes />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to delete the study group "{deleteConfirmGroup.name}"?</p>
+              <p className="warning-text">This action cannot be undone.</p>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="delete-confirm-btn" 
+                onClick={handleDeleteGroup}
+              >
+                Delete
+              </button>
+              <button 
+                className="cancel-btn" 
+                onClick={handleCancelDelete}
               >
                 Cancel
               </button>
