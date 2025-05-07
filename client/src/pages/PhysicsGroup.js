@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import './StudyGroup.css'; // Make sure to create this CSS file
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { FaExclamationCircle, FaPoll, FaClock } from 'react-icons/fa';
 
 const PhysicsGroup = () => {
   const [activeTab, setActiveTab] = useState('Quizzes');
@@ -7,6 +10,28 @@ const PhysicsGroup = () => {
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [userAnswers, setUserAnswers] = useState({});
   const [score, setScore] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
+  const { token } = useAuth();
+  const [quizResults, setQuizResults] = useState([
+    {
+      id: 1,
+      subject: 'Combined Mathematics',
+      topic: 'Calculus',
+      score: 10,
+      totalQuestions: 20,
+      correctAnswers: 2,
+      date: '4/3/2025'
+    },
+    {
+      id: 2,
+      subject: 'Physics',
+      topic: 'Mechanics',
+      score: 30,
+      totalQuestions: 20,
+      correctAnswers: 6,
+      date: '4/3/2025'
+    }
+  ]);
   
   // Array of study materials
   const studyMaterials = [
@@ -255,7 +280,7 @@ const PhysicsGroup = () => {
     }));
   };
 
-  const handleSubmitQuiz = () => {
+  const handleSubmitQuiz = async () => {
     let correctAnswers = 0;
     
     quizQuestions.forEach(question => {
@@ -264,9 +289,131 @@ const PhysicsGroup = () => {
       }
     });
     
+    const finalScore = Math.round((correctAnswers / quizQuestions.length) * 100);
     setScore(correctAnswers);
     setQuizSubmitted(true);
+
+    const newQuizResult = {
+      id: Date.now(),
+      subject: 'Physics',
+      topic: 'Mechanics',
+      score: finalScore,
+      totalQuestions: quizQuestions.length,
+      correctAnswers: correctAnswers,
+      date: new Date().toLocaleDateString()
+    };
+
+    setQuizResults(prevResults => [...prevResults, newQuizResult]);
+
+    const quizData = {
+      subject: 'Physics',
+      quizName: 'Mechanics Quiz',
+      score: finalScore,
+      totalQuestions: quizQuestions.length,
+      correctAnswers: correctAnswers,
+      date: new Date().toISOString()
+    };
+
+    try {
+      console.log('Attempting to submit quiz results:', quizData);
+      console.log('Using token:', token);
+
+      if (!token) {
+        setErrorMessage('Authentication error. Please try logging in again.');
+        setTimeout(() => setErrorMessage(''), 5000);
+        return;
+      }
+
+      const response = await axios.post(
+        'http://localhost:5001/api/users/quiz-results', 
+        quizData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Quiz submission response:', response.data);
+
+      if (response.data.success) {
+        console.log('Quiz results saved successfully:', response.data.quizResults);
+        document.dispatchEvent(new Event('visibilitychange'));
+      } else {
+        console.error('Failed to save quiz results:', response.data);
+        throw new Error(response.data.message || 'Failed to save quiz results');
+      }
+    } catch (error) {
+      console.error('Error saving quiz results:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        stack: error.stack
+      });
+      setErrorMessage('Error saving quiz results. Please try again.');
+      setTimeout(() => setErrorMessage(''), 5000);
+    }
   };
+
+  const renderQuizResults = () => (
+    <div className="quiz-results">
+      <div className="quiz-results-header">
+        <FaPoll className="quiz-results-icon" />
+        <h2>Quiz Results</h2>
+      </div>
+      <div className="quiz-results-table">
+        <div className="quiz-results-table-header">
+          <div>Subject</div>
+          <div>Score</div>
+          <div>Date</div>
+        </div>
+        {quizResults.length > 0 ? (
+          quizResults.map((result) => (
+            <div key={result.id} className="quiz-result-row">
+              <div>
+                <span className="quiz-subject">
+                  <FaClock style={{ marginRight: '6px' }} />
+                  {result.subject}
+                </span>
+              </div>
+              <div className="quiz-score">
+                {result.score}%
+              </div>
+              <div className="quiz-date">
+                {result.date}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="no-results">
+            No quiz results available
+          </div>
+        )}
+      </div>
+      <div className="quiz-actions">
+        <button 
+          className="retry-button"
+          onClick={() => {
+            setShowQuiz(true);
+            setQuizSubmitted(false);
+            setUserAnswers({});
+          }}
+        >
+          Try Again
+        </button>
+        <button 
+          className="back-button"
+          onClick={() => {
+            setShowQuiz(false);
+            setQuizSubmitted(false);
+          }}
+        >
+          Back to Quizzes
+        </button>
+      </div>
+    </div>
+  );
 
   // Placeholder content for other tabs
   const renderTabContent = () => {
@@ -351,35 +498,7 @@ const PhysicsGroup = () => {
           return (
             <div className="quiz-container">
               <h2>Mechanics Quiz</h2>
-              {quizSubmitted ? (
-                <div className="quiz-results">
-                  <div className="score-display">
-                    <h3>Your Score: {score} out of 20</h3>
-                    <div className="score-percentage">
-                      {Math.round((score / 20) * 100)}%
-                    </div>
-                  </div>
-                  <button 
-                    className="retry-button"
-                    onClick={() => {
-                      setShowQuiz(true);
-                      setQuizSubmitted(false);
-                      setUserAnswers({});
-                    }}
-                  >
-                    Try Again
-                  </button>
-                  <button 
-                    className="back-button"
-                    onClick={() => {
-                      setShowQuiz(false);
-                      setQuizSubmitted(false);
-                    }}
-                  >
-                    Back to Quizzes
-                  </button>
-                </div>
-              ) : (
+              {quizSubmitted ? renderQuizResults() : (
                 <>
                   <div className="quiz-questions">
                     {quizQuestions.map((question) => (
@@ -455,6 +574,12 @@ const PhysicsGroup = () => {
 
   return (
     <div className="study-group-page">
+      {errorMessage && (
+        <div className="error-message">
+          <FaExclamationCircle />
+          {errorMessage}
+        </div>
+      )}
       <div className="study-group-container">
         <div className="study-group-navigation">
           {['Study Material', 'Videos', 'Quizzes', 'Community Chat', 'Quick Answers'].map((tab) => (

@@ -52,6 +52,47 @@ const userSchema = new mongoose.Schema({
   },
   examDate: {
     type: Date
+  },
+  quizResults: [{
+    subject: String,
+    quizName: String,
+    score: Number,
+    totalQuestions: Number,
+    correctAnswers: Number,
+    date: Date
+  }],
+  recentActivity: [{
+    type: {
+      type: String,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  totalStudyHours: {
+    type: Number,
+    default: 0
+  },
+  weeklyStudyHours: {
+    type: Number,
+    default: 0
+  },
+  studyStreak: {
+    type: Number,
+    default: 0
+  },
+  todayStudyTime: {
+    type: Number,
+    default: 0
+  },
+  lastStudyDate: {
+    type: Date
   }
 });
 

@@ -130,7 +130,9 @@ function NavBar() {
                 </a>
               </>
             ) : (
-              <div className="profile-section">
+              <>
+                <Link to="/dashboard" className="nav-link">Dashboard</Link>
+                <span className="separator">|</span>
                 <Link to="/profile">
                   <img 
                     src={defaultProfile} 
@@ -138,7 +140,7 @@ function NavBar() {
                     className="profile-image" 
                   />
                 </Link>
-              </div>
+              </>
             )}
           </div>
         </div>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import './StudyGroup.css'; // Using the same CSS file as Physics group
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const CombinedMathsGroup = () => {
   const [activeTab, setActiveTab] = useState('Study Material');
@@ -7,6 +9,7 @@ const CombinedMathsGroup = () => {
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [userAnswers, setUserAnswers] = useState({});
   const [score, setScore] = useState(0);
+  const { token } = useAuth();
   
   // Array of study materials
   const studyMaterials = [
@@ -255,7 +258,7 @@ const CombinedMathsGroup = () => {
     }));
   };
 
-  const handleSubmitQuiz = () => {
+  const handleSubmitQuiz = async () => {
     let correctAnswers = 0;
     
     quizQuestions.forEach(question => {
@@ -264,8 +267,27 @@ const CombinedMathsGroup = () => {
       }
     });
     
+    const finalScore = Math.round((correctAnswers / quizQuestions.length) * 100);
     setScore(correctAnswers);
     setQuizSubmitted(true);
+
+    try {
+      await axios.post('http://localhost:5001/api/users/quiz-results', {
+        subject: 'Combined Mathematics',
+        quizName: 'Calculus Quiz',
+        score: finalScore,
+        totalQuestions: quizQuestions.length,
+        correctAnswers: correctAnswers,
+        date: new Date()
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      console.error('Error saving quiz results:', error);
+    }
   };
 
   // Placeholder content for other tabs

@@ -84,10 +84,10 @@ router.post('/register', async (req, res) => {
 // @access  Private
 router.put('/profile', auth, async (req, res) => {
   try {
-    const { firstName, lastName, university, course } = req.body;
-    const userId = req.user.id; // This will be set by auth middleware
+    const { firstName, lastName, university, course, examDate } = req.body;
+    const userId = req.user.id;
 
-    // Find user and update
+    // Find user
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -98,11 +98,29 @@ router.put('/profile', auth, async (req, res) => {
     if (lastName) user.lastName = lastName;
     if (university) user.university = university;
     if (course) user.course = course;
+    if (examDate) user.examDate = examDate;
+
+    // Add profile update activity
+    const activity = {
+      type: 'profile',
+      description: 'Updated profile information',
+      timestamp: new Date()
+    };
+
+    // Initialize recentActivity array if it doesn't exist
+    if (!user.recentActivity) {
+      user.recentActivity = [];
+    }
+
+    // Add new activity and keep only last 10
+    user.recentActivity.unshift(activity);
+    user.recentActivity = user.recentActivity.slice(0, 10);
 
     await user.save();
 
-    res.json({
+    res.json({ 
       success: true,
+      message: 'Profile updated successfully',
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -110,6 +128,7 @@ router.put('/profile', auth, async (req, res) => {
         email: user.email,
         university: user.university,
         course: user.course,
+        examDate: user.examDate,
         profilePicture: user.profilePicture
       }
     });
@@ -176,6 +195,23 @@ router.put('/profile-photo', auth, upload.single('profilePhoto'), async (req, re
     // Update user's profile picture path
     const profilePicturePath = '/uploads/profile-photos/' + req.file.filename;
     user.profilePicture = profilePicturePath;
+
+    // Add profile photo update activity
+    const activity = {
+      type: 'profile',
+      description: 'Updated profile photo',
+      timestamp: new Date()
+    };
+
+    // Initialize recentActivity array if it doesn't exist
+    if (!user.recentActivity) {
+      user.recentActivity = [];
+    }
+
+    // Add new activity and keep only last 10
+    user.recentActivity.unshift(activity);
+    user.recentActivity = user.recentActivity.slice(0, 10);
+
     await user.save();
 
     res.json({
@@ -353,6 +389,256 @@ router.put('/:id/status', auth, async (req, res) => {
       success: false,
       message: 'Server error', 
       error: error.message 
+    });
+  }
+});
+
+// @route   GET api/users/dashboard
+// @desc    Get user dashboard data
+// @access  Private
+router.get('/dashboard', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    // Get user's study progress
+    const studyProgress = {
+      totalHours: user.totalStudyHours || 0,
+      weeklyHours: user.weeklyStudyHours || 0,
+      streak: user.studyStreak || 0
+    };
+
+    // Get user's quiz results
+    const quizResults = user.quizResults || [];
+
+    // Get user's recent activity
+    const recentActivity = user.recentActivity || [];
+
+    // Get exam countdown if exam date exists
+    const examCountdown = user.examDate ? {
+      examName: user.examName,
+      examDate: user.examDate
+    } : null;
+
+    res.json({
+      success: true,
+      dashboard: {
+        studyProgress,
+        quizResults,
+        recentActivity,
+        examCountdown
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching dashboard data'
+    });
+  }
+});
+
+// @route   POST api/users/quiz-results
+// @desc    Save user's quiz results
+// @access  Private
+router.post('/quiz-results', auth, async (req, res) => {
+  try {
+    console.log('Received quiz results request. Body:', req.body);
+    console.log('User from token:', req.user);
+    
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      console.error('User not found with ID:', req.user.id);
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    console.log('Found user:', {
+      id: user._id,
+      email: user.email,
+      currentQuizResults: user.quizResults?.length || 0
+    });
+
+    const { subject, quizName, score, totalQuestions, correctAnswers, date } = req.body;
+
+    // Validate required fields
+    if (!subject || !quizName || score == null || !totalQuestions || correctAnswers == null) {
+      console.error('Missing required fields:', {
+        subject,
+        quizName,
+        score,
+        totalQuestions,
+        correctAnswers
+      });
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Add the new quiz result
+    const quizResult = {
+      subject,
+      quizName,
+      score,
+      totalQuestions,
+      correctAnswers,
+      date: date || new Date()
+    };
+
+    console.log('Creating new quiz result:', quizResult);
+
+    // Initialize arrays if they don't exist
+    if (!Array.isArray(user.quizResults)) {
+      console.log('Initializing quizResults array');
+      user.quizResults = [];
+    }
+    if (!Array.isArray(user.recentActivity)) {
+      console.log('Initializing recentActivity array');
+      user.recentActivity = [];
+    }
+
+    // Add to the beginning of the array to show most recent first
+    user.quizResults.unshift(quizResult);
+    console.log('Added quiz result. New length:', user.quizResults.length);
+
+    // Keep only the last 10 quiz results
+    if (user.quizResults.length > 10) {
+      user.quizResults = user.quizResults.slice(0, 10);
+      console.log('Trimmed quiz results to 10');
+    }
+
+    // Add to recent activity
+    const activityEntry = {
+      type: 'quiz',
+      description: `Completed ${quizName} with score ${score}%`,
+      timestamp: date || new Date()
+    };
+    user.recentActivity.unshift(activityEntry);
+    console.log('Added activity entry:', activityEntry);
+
+    // Keep only the last 10 activities
+    if (user.recentActivity.length > 10) {
+      user.recentActivity = user.recentActivity.slice(0, 10);
+      console.log('Trimmed recent activity to 10');
+    }
+
+    console.log('Saving user with updated data...');
+    await user.save();
+    console.log('User saved successfully');
+
+    res.json({
+      success: true,
+      message: 'Quiz results saved successfully',
+      quizResults: user.quizResults,
+      recentActivity: user.recentActivity
+    });
+  } catch (error) {
+    console.error('Error in quiz results route:', {
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({
+      success: false,
+      message: 'Error saving quiz results',
+      error: error.message
+    });
+  }
+});
+
+// @route   POST api/users/study-progress
+// @desc    Update user's study progress
+// @access  Private
+router.post('/study-progress', auth, async (req, res) => {
+  try {
+    const { studyDuration } = req.body; // Duration in minutes
+    const MINIMUM_DAILY_MINUTES = 60; // Minimum minutes required for streak (1 hour)
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Convert minutes to hours
+    const hoursStudied = studyDuration / 60;
+
+    // Update total study hours
+    user.totalStudyHours = (user.totalStudyHours || 0) + hoursStudied;
+
+    // Update weekly study hours
+    user.weeklyStudyHours = (user.weeklyStudyHours || 0) + hoursStudied;
+
+    // Get today's date at midnight for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Initialize today's study time if not exists
+    if (!user.todayStudyTime) {
+      user.todayStudyTime = 0;
+    }
+
+    // Check if it's a new day
+    const lastStudyDate = user.lastStudyDate ? new Date(user.lastStudyDate) : null;
+    if (lastStudyDate) {
+      lastStudyDate.setHours(0, 0, 0, 0);
+    }
+
+    if (!lastStudyDate || lastStudyDate.getTime() < today.getTime()) {
+      // It's a new day
+      user.todayStudyTime = studyDuration;
+
+      // Check if the last study was yesterday and met minimum time
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (!lastStudyDate || (lastStudyDate.getTime() === yesterday.getTime() && user.todayStudyTime >= MINIMUM_DAILY_MINUTES)) {
+        // Either this is the first study session ever, or they studied enough yesterday
+        user.studyStreak = (user.studyStreak || 0) + 1;
+      } else {
+        // They missed a day or didn't study enough, reset streak to 1
+        user.studyStreak = 1;
+      }
+    } else {
+      // Same day, add to today's time
+      user.todayStudyTime += studyDuration;
+    }
+
+    // Update last study date
+    user.lastStudyDate = new Date();
+
+    await user.save();
+
+    // Calculate minutes needed for today's streak
+    const minutesNeededForStreak = Math.max(0, MINIMUM_DAILY_MINUTES - user.todayStudyTime);
+
+    res.json({
+      success: true,
+      message: 'Study progress updated successfully',
+      studyProgress: {
+        totalHours: user.totalStudyHours,
+        weeklyHours: user.weeklyStudyHours,
+        streak: user.studyStreak,
+        todayMinutes: user.todayStudyTime,
+        minutesNeededForStreak
+      }
+    });
+  } catch (error) {
+    console.error('Error updating study progress:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating study progress',
+      error: error.message
     });
   }
 });

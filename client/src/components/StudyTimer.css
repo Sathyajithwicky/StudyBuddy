@@ -1,0 +1,62 @@
+.study-timer {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%;
+  }
+  
+  .timer-display {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+    font-family: monospace;
+  }
+  
+  .timer-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  .timer-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .timer-button.start {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .timer-button.stop {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .timer-button.reset {
+    background-color: #2196F3;
+    color: white;
+  }
+  
+  .timer-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .timer-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .timer-button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  } 
