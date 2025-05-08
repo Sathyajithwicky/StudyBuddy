@@ -61,11 +61,37 @@ function Dashboard() {
   }, [token]);
 
   // Handle study progress update
-  const handleStudyComplete = (updatedProgress) => {
+  const handleStudyComplete = async (updatedProgress) => {
+    // Only update streak if study time is 60 minutes or more
+    const newStreak = updatedProgress.todayMinutes >= 60 ? 
+      (dashboardData.studyProgress.streak + 1) : 
+      dashboardData.studyProgress.streak;
+
+    const updatedData = {
+      ...updatedProgress,
+      streak: newStreak
+    };
+
+    // Update local state
     setDashboardData(prev => ({
       ...prev,
-      studyProgress: updatedProgress
+      studyProgress: updatedData
     }));
+
+    // Send update to server
+    try {
+      await axios.put('http://localhost:5001/api/users/study-progress', 
+        { studyProgress: updatedData },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error updating study progress:', error);
+    }
   };
 
   // Calculate time remaining until exam
@@ -137,7 +163,11 @@ function Dashboard() {
                 <h2>Study Timer</h2>
               </div>
               <div className="card-content">
-                <StudyTimer onStudyComplete={handleStudyComplete} />
+                <StudyTimer 
+                  onStudyComplete={handleStudyComplete} 
+                  minimumForStreak={60} 
+                  currentStreak={dashboardData.studyProgress?.streak || 0}
+                />
               </div>
             </div>
 
@@ -164,14 +194,14 @@ function Dashboard() {
                       {dashboardData.studyProgress?.todayMinutes ? (
                         <>
                           {Math.round(dashboardData.studyProgress.todayMinutes)} mins today
-                          {dashboardData.studyProgress.minutesNeededForStreak > 60 && (
+                          {dashboardData.studyProgress.todayMinutes < 60 && (
                             <span className="streak-needed">
-                              ({dashboardData.studyProgress.minutesNeededForStreak} mins needed for streak)
+                              (Study 60+ minutes to maintain streak)
                             </span>
                           )}
                         </>
                       ) : (
-                        'Study 1 hour to maintain streak!'
+                        'Study 60+ minutes to maintain streak!'
                       )}
                     </span>
                   </div>
@@ -266,4 +296,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard; 
+export default Dashboard;
