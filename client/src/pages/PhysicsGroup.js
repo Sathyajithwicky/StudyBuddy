@@ -1,231 +1,275 @@
-import React, { useState } from 'react';
-import './StudyGroup.css'; // Make sure to create this CSS file
+import React, { useState } from "react";
+import "./StudyGroup.css"; // Make sure to create this CSS file
+import ChatBot from "../components/Bots/ChatBotPhy";
 
 const PhysicsGroup = () => {
-  const [activeTab, setActiveTab] = useState('Quizzes');
+  const [activeTab, setActiveTab] = useState("Quizzes");
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [userAnswers, setUserAnswers] = useState({});
   const [score, setScore] = useState(0);
-  
+
   // Array of study materials
   const studyMaterials = [
-    { name: 'Physics Fundamentals.pdf', size: '2.3 MB' },
-    { name: 'Mechanics Notes.pdf', size: '2.3 MB' },
-    { name: 'Practice Problems.pdf', size: '2.3 MB' },
-    { name: 'Formula Sheet.pdf', size: '2.3 MB' },
-    { name: 'Past Papers.pdf', size: '2.3 MB' }
+    { name: "Physics Fundamentals.pdf", size: "2.3 MB" },
+    { name: "Mechanics Notes.pdf", size: "2.3 MB" },
+    { name: "Practice Problems.pdf", size: "2.3 MB" },
+    { name: "Formula Sheet.pdf", size: "2.3 MB" },
+    { name: "Past Papers.pdf", size: "2.3 MB" },
   ];
 
   // Array of quizzes
   const quizzes = [
-    { name: 'Mechanics Quiz', size: '20 Questions' },
-    { name: 'Thermodynamics Quiz', size: '15 Questions' },
-    { name: 'Electromagnetism Quiz', size: '18 Questions' },
-    { name: 'Quantum Physics Quiz', size: '12 Questions' },
-    { name: 'Relativity Quiz', size: '10 Questions' }
+    { name: "Mechanics Quiz", size: "20 Questions" },
+    { name: "Thermodynamics Quiz", size: "15 Questions" },
+    { name: "Electromagnetism Quiz", size: "18 Questions" },
+    { name: "Quantum Physics Quiz", size: "12 Questions" },
+    { name: "Relativity Quiz", size: "10 Questions" },
   ];
 
   // Quiz questions
   const quizQuestions = [
     {
       id: 1,
-      question: "What is the acceleration of a vehicle moving at a constant velocity?",
+      question:
+        "What is the acceleration of a vehicle moving at a constant velocity?",
       options: ["0 m/s²", "9.8 m/s²", "1 m/s²", "5 m/s²"],
-      correctAnswer: "0 m/s²"
+      correctAnswer: "0 m/s²",
     },
     {
       id: 2,
       question: "What is the unit of linear momentum?",
       options: ["kg m/s", "kg m/s²", "N", "J"],
-      correctAnswer: "kg m/s"
+      correctAnswer: "kg m/s",
     },
     {
       id: 3,
       question: "Which force acts parallel to the surface of contact?",
-      options: ["Gravitational force", "Normal force", "Frictional force", "Tension"],
-      correctAnswer: "Frictional force"
+      options: [
+        "Gravitational force",
+        "Normal force",
+        "Frictional force",
+        "Tension",
+      ],
+      correctAnswer: "Frictional force",
     },
     {
       id: 4,
       question: "Newton's first law is also known as the law of…?",
-      options: ["Acceleration", "Inertia", "Action and reaction", "Energy conservation"],
-      correctAnswer: "Inertia"
+      options: [
+        "Acceleration",
+        "Inertia",
+        "Action and reaction",
+        "Energy conservation",
+      ],
+      correctAnswer: "Inertia",
     },
     {
       id: 5,
       question: "What is the SI unit of force?",
       options: ["Pascal", "Newton", "Joule", "Watt"],
-      correctAnswer: "Newton"
+      correctAnswer: "Newton",
     },
     {
       id: 6,
-      question: "A ball is thrown straight up. At its highest point, its velocity is…?",
+      question:
+        "A ball is thrown straight up. At its highest point, its velocity is…?",
       options: ["Maximum", "Zero", "Equal to initial velocity", "Infinite"],
-      correctAnswer: "Zero"
+      correctAnswer: "Zero",
     },
     {
       id: 7,
-      question: "The gravitational acceleration (g) on Earth is approximately…?",
+      question:
+        "The gravitational acceleration (g) on Earth is approximately…?",
       options: ["5.8 m/s²", "9.8 m/s²", "12.8 m/s²", "1.8 m/s²"],
-      correctAnswer: "9.8 m/s²"
+      correctAnswer: "9.8 m/s²",
     },
     {
       id: 8,
       question: "Work is defined as…?",
-      options: ["Force × Time", "Force × Distance", "Mass × Acceleration", "Mass × Velocity"],
-      correctAnswer: "Force × Distance"
+      options: [
+        "Force × Time",
+        "Force × Distance",
+        "Mass × Acceleration",
+        "Mass × Velocity",
+      ],
+      correctAnswer: "Force × Distance",
     },
     {
       id: 9,
-      question: "A body in motion continues moving unless acted upon by an external force. This is…?",
-      options: ["Newton's 1st Law", "Newton's 2nd Law", "Newton's 3rd Law", "Law of Gravitation"],
-      correctAnswer: "Newton's 1st Law"
+      question:
+        "A body in motion continues moving unless acted upon by an external force. This is…?",
+      options: [
+        "Newton's 1st Law",
+        "Newton's 2nd Law",
+        "Newton's 3rd Law",
+        "Law of Gravitation",
+      ],
+      correctAnswer: "Newton's 1st Law",
     },
     {
       id: 10,
-      question: "The ability of an object to resist changes in its motion is called…?",
+      question:
+        "The ability of an object to resist changes in its motion is called…?",
       options: ["Energy", "Power", "Inertia", "Work"],
-      correctAnswer: "Inertia"
+      correctAnswer: "Inertia",
     },
     {
       id: 11,
       question: "The product of mass and velocity is called…?",
       options: ["Force", "Momentum", "Work", "Acceleration"],
-      correctAnswer: "Momentum"
+      correctAnswer: "Momentum",
     },
     {
       id: 12,
       question: "The SI unit of power is…?",
       options: ["Joule", "Watt", "Newton", "Pascal"],
-      correctAnswer: "Watt"
+      correctAnswer: "Watt",
     },
     {
       id: 13,
-      question: "An object is moving in a circular path at constant speed. What remains constant?",
+      question:
+        "An object is moving in a circular path at constant speed. What remains constant?",
       options: ["Velocity", "Acceleration", "Speed", "Direction"],
-      correctAnswer: "Speed"
+      correctAnswer: "Speed",
     },
     {
       id: 14,
       question: "The force that opposes the motion of an object in fluid is…?",
       options: ["Friction", "Tension", "Drag", "Normal force"],
-      correctAnswer: "Drag"
+      correctAnswer: "Drag",
     },
     {
       id: 15,
       question: "Which of the following is a vector quantity?",
       options: ["Speed", "Distance", "Work", "Force"],
-      correctAnswer: "Force"
+      correctAnswer: "Force",
     },
     {
       id: 16,
       question: "The force that acts on an object due to gravity is called…?",
       options: ["Mass", "Weight", "Momentum", "Friction"],
-      correctAnswer: "Weight"
+      correctAnswer: "Weight",
     },
     {
       id: 17,
       question: "What is the SI unit of work?",
       options: ["Newton", "Joule", "Watt", "Pascal"],
-      correctAnswer: "Joule"
+      correctAnswer: "Joule",
     },
     {
       id: 18,
       question: "If the net force on an object is zero, the object will…?",
-      options: ["Accelerate", "Move in a circular path", "Remain at rest or move with constant velocity", "Fall freely"],
-      correctAnswer: "Remain at rest or move with constant velocity"
+      options: [
+        "Accelerate",
+        "Move in a circular path",
+        "Remain at rest or move with constant velocity",
+        "Fall freely",
+      ],
+      correctAnswer: "Remain at rest or move with constant velocity",
     },
     {
       id: 19,
       question: "The force of action and reaction are…?",
-      options: ["Equal in magnitude and opposite in direction", "Equal in magnitude and same direction", "Different in magnitude", "Independent of each other"],
-      correctAnswer: "Equal in magnitude and opposite in direction"
+      options: [
+        "Equal in magnitude and opposite in direction",
+        "Equal in magnitude and same direction",
+        "Different in magnitude",
+        "Independent of each other",
+      ],
+      correctAnswer: "Equal in magnitude and opposite in direction",
     },
     {
       id: 20,
       question: "The acceleration of an object is directly proportional to…?",
-      options: ["Its mass", "The net force acting on it", "Its velocity", "Its energy"],
-      correctAnswer: "The net force acting on it"
-    }
+      options: [
+        "Its mass",
+        "The net force acting on it",
+        "Its velocity",
+        "Its energy",
+      ],
+      correctAnswer: "The net force acting on it",
+    },
   ];
 
   // Array of physics videos
   const videos = [
     {
       id: 1,
-      title: 'Understanding Quantum Mechanics: Wave-Particle Duality Explained',
-      channel: 'Physics Explained',
-      views: '899K views',
-      timeAgo: '6 hours ago',
-      thumbnail: 'https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg',
-      duration: '27:09',
+      title: "Understanding Quantum Mechanics: Wave-Particle Duality Explained",
+      channel: "Physics Explained",
+      views: "899K views",
+      timeAgo: "6 hours ago",
+      thumbnail: "https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg",
+      duration: "27:09",
       verified: true,
-      url: 'https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK'
+      url: "https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK",
     },
     {
       id: 2,
-      title: 'Newton\'s Laws of Motion - Comprehensive Physics Tutorial',
-      channel: 'Science Academy',
-      views: '4.2M views',
-      timeAgo: '1 day ago',
-      thumbnail: 'https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg',
-      duration: '3:14',
+      title: "Newton's Laws of Motion - Comprehensive Physics Tutorial",
+      channel: "Science Academy",
+      views: "4.2M views",
+      timeAgo: "1 day ago",
+      thumbnail: "https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg",
+      duration: "3:14",
       verified: true,
-      url: 'https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK'
+      url: "https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK",
     },
     {
       id: 3,
-      title: 'Special Relativity: Understanding Einstein\'s Revolutionary Theory',
-      channel: 'Physics World',
-      views: '618K views',
-      timeAgo: '2 days ago',
-      thumbnail: 'https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg',
-      duration: '49:28',
+      title:
+        "Special Relativity: Understanding Einstein's Revolutionary Theory",
+      channel: "Physics World",
+      views: "618K views",
+      timeAgo: "2 days ago",
+      thumbnail: "https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg",
+      duration: "49:28",
       verified: true,
       live: true,
-      url: 'https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK'
+      url: "https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK",
     },
     {
       id: 4,
-      title: 'Electromagnetism Fundamentals - From Maxwell\'s Equations to Applications',
-      channel: 'Physics Lectures',
-      views: 'Updated today',
-      timeAgo: '',
-      thumbnail: 'https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg',
-      duration: '',
+      title:
+        "Electromagnetism Fundamentals - From Maxwell's Equations to Applications",
+      channel: "Physics Lectures",
+      views: "Updated today",
+      timeAgo: "",
+      thumbnail: "https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg",
+      duration: "",
       verified: false,
-      url: 'https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK'
+      url: "https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK",
     },
     {
       id: 5,
-      title: 'Thermodynamics: Laws, Entropy and Energy Transfer Explained',
-      channel: 'Science Simplified',
-      views: '118 views',
-      timeAgo: '1 day ago',
-      thumbnail: 'https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg',
-      duration: '5:04',
+      title: "Thermodynamics: Laws, Entropy and Energy Transfer Explained",
+      channel: "Science Simplified",
+      views: "118 views",
+      timeAgo: "1 day ago",
+      thumbnail: "https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg",
+      duration: "5:04",
       verified: false,
-      url: 'https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK'
+      url: "https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK",
     },
     {
       id: 6,
-      title: 'Quantum Field Theory: Understanding the Fundamental Forces',
-      channel: 'Advanced Physics',
-      views: '2.7M views',
-      timeAgo: '1 month ago',
-      thumbnail: 'https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg',
-      duration: '2:12',
+      title: "Quantum Field Theory: Understanding the Fundamental Forces",
+      channel: "Advanced Physics",
+      views: "2.7M views",
+      timeAgo: "1 month ago",
+      thumbnail: "https://img.youtube.com/vi/cqUcqLL_dyA/maxresdefault.jpg",
+      duration: "2:12",
       verified: true,
-      url: 'https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK'
-    }
+      url: "https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK",
+    },
   ];
 
   const handleDownload = (fileName) => {
     // In a real app, this would be an API call to download the file
     // For now, we'll just show an alert
     alert(`Downloading ${fileName}`);
-    
+
     // You would typically do something like this:
     // const fileUrl = `/api/files/download/${fileName}`;
     // window.open(fileUrl, '_blank');
@@ -239,7 +283,7 @@ const PhysicsGroup = () => {
   };
 
   const handleVideoClick = (videoUrl) => {
-    window.open(videoUrl, '_blank');
+    window.open(videoUrl, "_blank");
   };
 
   const handleStartQuiz = () => {
@@ -249,36 +293,46 @@ const PhysicsGroup = () => {
   };
 
   const handleAnswerSelect = (questionId, answer) => {
-    setUserAnswers(prev => ({
+    setUserAnswers((prev) => ({
       ...prev,
-      [questionId]: answer
+      [questionId]: answer,
     }));
   };
 
   const handleSubmitQuiz = () => {
     let correctAnswers = 0;
-    
-    quizQuestions.forEach(question => {
+
+    quizQuestions.forEach((question) => {
       if (userAnswers[question.id] === question.correctAnswer) {
         correctAnswers++;
       }
     });
-    
+
     setScore(correctAnswers);
     setQuizSubmitted(true);
   };
 
   // Placeholder content for other tabs
   const renderTabContent = () => {
-    switch(activeTab) {
-      case 'Study Material':
+    switch (activeTab) {
+      case "Study Material":
         return (
           <div className="study-materials-list">
             {studyMaterials.map((material, index) => (
               <div key={index} className="material-item">
                 <div className="material-info">
                   <div className="file-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                       <polyline points="14 2 14 8 20 8"></polyline>
                     </svg>
@@ -288,8 +342,8 @@ const PhysicsGroup = () => {
                     <div className="file-size">{material.size}</div>
                   </div>
                 </div>
-                <button 
-                  className="download-button" 
+                <button
+                  className="download-button"
                   onClick={() => handleDownload(material.name)}
                 >
                   Download
@@ -298,28 +352,28 @@ const PhysicsGroup = () => {
             ))}
           </div>
         );
-      case 'Videos':
+      case "Videos":
         return (
           <div className="videos-grid">
             {videos.map((video) => (
-              <div key={video.id} className="video-card" onClick={() => handleVideoClick(video.url)}>
+              <div
+                key={video.id}
+                className="video-card"
+                onClick={() => handleVideoClick(video.url)}
+              >
                 <div className="thumbnail-container">
-                  <img 
-                    src={video.thumbnail} 
-                    alt={video.title} 
-                    className="video-thumbnail" 
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="video-thumbnail"
                   />
                   {video.duration && (
                     <div className="video-duration">{video.duration}</div>
                   )}
-                  {video.live && (
-                    <div className="live-badge">LIVE</div>
-                  )}
+                  {video.live && <div className="live-badge">LIVE</div>}
                 </div>
                 <div className="video-info">
-                  <div className="channel-icon">
-                    {video.channel.charAt(0)}
-                  </div>
+                  <div className="channel-icon">{video.channel.charAt(0)}</div>
                   <div className="video-details">
                     <h3 className="video-title">{video.title}</h3>
                     <div className="channel-info">
@@ -346,7 +400,7 @@ const PhysicsGroup = () => {
             ))}
           </div>
         );
-      case 'Quizzes':
+      case "Quizzes":
         if (showQuiz) {
           return (
             <div className="quiz-container">
@@ -359,7 +413,7 @@ const PhysicsGroup = () => {
                       {Math.round((score / 20) * 100)}%
                     </div>
                   </div>
-                  <button 
+                  <button
                     className="retry-button"
                     onClick={() => {
                       setShowQuiz(true);
@@ -369,7 +423,7 @@ const PhysicsGroup = () => {
                   >
                     Try Again
                   </button>
-                  <button 
+                  <button
                     className="back-button"
                     onClick={() => {
                       setShowQuiz(false);
@@ -388,10 +442,16 @@ const PhysicsGroup = () => {
                         <p>{question.question}</p>
                         <div className="options-list">
                           {question.options.map((option, index) => (
-                            <div 
-                              key={index} 
-                              className={`option ${userAnswers[question.id] === option ? 'selected' : ''}`}
-                              onClick={() => handleAnswerSelect(question.id, option)}
+                            <div
+                              key={index}
+                              className={`option ${
+                                userAnswers[question.id] === option
+                                  ? "selected"
+                                  : ""
+                              }`}
+                              onClick={() =>
+                                handleAnswerSelect(question.id, option)
+                              }
                             >
                               <span className="option-letter">
                                 {String.fromCharCode(65 + index)}
@@ -404,7 +464,7 @@ const PhysicsGroup = () => {
                     ))}
                   </div>
                   <div className="quiz-actions">
-                    <button 
+                    <button
                       className="submit-quiz-button"
                       onClick={handleSubmitQuiz}
                       disabled={Object.keys(userAnswers).length < 20}
@@ -423,7 +483,17 @@ const PhysicsGroup = () => {
                 <div key={index} className="material-item">
                   <div className="material-info">
                     <div className="file-icon">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <path d="M9 11l3 3L22 4"></path>
                         <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
                       </svg>
@@ -433,10 +503,7 @@ const PhysicsGroup = () => {
                       <div className="file-size">{quiz.size}</div>
                     </div>
                   </div>
-                  <button 
-                    className="quiz-button" 
-                    onClick={handleStartQuiz}
-                  >
+                  <button className="quiz-button" onClick={handleStartQuiz}>
                     Attempt Quiz
                   </button>
                 </div>
@@ -444,12 +511,20 @@ const PhysicsGroup = () => {
             </div>
           );
         }
-      case 'Community Chat':
-        return <div className="placeholder-content">Community chat will be displayed here</div>;
-      case 'Quick Answers':
-        return <div className="placeholder-content">Quick answers will be displayed here</div>;
+      case "Community Chat":
+        return (
+          <div className="placeholder-content">
+            Community chat will be displayed here
+          </div>
+        );
+      case "Quick Answers":
+        return <ChatBot />;
       default:
-        return <div className="placeholder-content">Select a tab to view content</div>;
+        return (
+          <div className="placeholder-content">
+            Select a tab to view content
+          </div>
+        );
     }
   };
 
@@ -457,26 +532,37 @@ const PhysicsGroup = () => {
     <div className="study-group-page">
       <div className="study-group-container">
         <div className="study-group-navigation">
-          {['Study Material', 'Videos', 'Quizzes', 'Community Chat', 'Quick Answers'].map((tab) => (
-            <button 
+          {[
+            "Study Material",
+            "Videos",
+            "Quizzes",
+            "Community Chat",
+            "Quick Answers",
+          ].map((tab) => (
+            <button
               key={tab}
-              className={`nav-button ${activeTab === tab ? 'active' : ''}`}
+              className={`nav-button ${activeTab === tab ? "active" : ""}`}
               onClick={() => handleTabChange(tab)}
             >
               {tab}
             </button>
           ))}
         </div>
-        
-        <div className="content-container">
-          {renderTabContent()}
-        </div>
+
+        <div className="content-container">{renderTabContent()}</div>
       </div>
       <div className="attribution">
-        Video source: <a href="https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK" target="_blank" rel="noopener noreferrer">YouTube</a>
+        Video source:{" "}
+        <a
+          href="https://youtu.be/cqUcqLL_dyA?si=_j0iAB0DGtmeo-oK"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          YouTube
+        </a>
       </div>
     </div>
   );
 };
 
-export default PhysicsGroup; 
+export default PhysicsGroup;

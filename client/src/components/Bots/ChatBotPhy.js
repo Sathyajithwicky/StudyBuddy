@@ -1,17 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./ChatBot.css";
-import bot from "../assets/bot.png";
-import add from "../assets/add.png";
-import ProfilePic from "../assets/default-profile.png";
+import bot from "../../assets/bot.png";
+import add from "../../assets/add.png";
+import ProfilePic from "../../assets/default-profile.png";
 
-function ChatBot() {
-  //add state for input and chatlog
+function ChatBotPhy() {
   const [input, setInput] = useState("");
   const [chatLog, setChatLog] = useState([]);
   const chatLogRef = useRef(null);
+  const subject = "Physics"; // ✅ Static subject
 
   useEffect(() => {
-    // Scroll to the bottom of the chat log whenever it updates
     if (chatLogRef.current) {
       chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
     }
@@ -23,25 +22,24 @@ function ChatBot() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    // Add the input to the chat log
-    setChatLog((prev) => [...prev, { user: "me", message: input }]);
+    if (!input.trim()) return;
 
-    const userMessage = input; // Capture the user's input
+    setChatLog((prev) => [...prev, { user: "me", message: input }]);
+    const userMessage = input;
     setInput("");
 
-    // Call the API to get the response
-    const response = await fetch("http://localhost:5001/api/chatbot", {
+    const response = await fetch("http://localhost:5001/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message: userMessage, // Send only the user's input
+        question: userMessage,
+        subject: subject, // ✅ Send subject with the request
       }),
     });
 
     const data = await response.json();
-    // Add the response to the chat log
     setChatLog((prev) => [...prev, { user: "ai", message: data.message }]);
     console.log(data.message);
   }
@@ -57,7 +55,7 @@ function ChatBot() {
         <div className="sidemenu_chats">
           <div className="sidemenu_chat">
             <div className="chat_details">
-              <h3>Manuja</h3> {/* need to add the name of the user */}
+              <h3>Manuja</h3>
               <p>Hi there! How can I help you?</p>
             </div>
           </div>
@@ -72,15 +70,13 @@ function ChatBot() {
       </aside>
 
       <section className="chatbox">
-        <div className="chat_log">
+        <div className="chat_log" ref={chatLogRef}>
           {chatLog.map((message, index) => (
             <ChatMessage key={index} message={message} />
           ))}
         </div>
-        <div
-          className="
-        chat-input-holder"
-        >
+
+        <div className="chat-input-holder">
           <form className="chat-input-form" onSubmit={handleSubmit}>
             <input
               type="text"
@@ -120,4 +116,4 @@ const ChatMessage = ({ message }) => {
   );
 };
 
-export default ChatBot;
+export default ChatBotPhy;

@@ -1,61 +1,65 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './SignUp.css';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import "./SignUp.css";
+import { useAuth } from "../context/AuthContext";
 
 function SignUp() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    university: '',
-    course: ''
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    university: "",
+    course: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = async (e) => {
+    console.log("Form data:", formData); // Log the form data
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       setIsLoading(false);
       return;
     }
 
     try {
-      const response = await axios.post('http://localhost:5001/api/auth/register', {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        university: formData.university,
-        course: formData.course
-      });
+      const response = await axios.post(
+        "http://localhost:5001/api/auth/register",
+        {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          university: formData.university,
+          course: formData.course,
+        }
+      );
 
       if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
+        localStorage.setItem("token", response.data.token);
         await login(response.data.token);
-        navigate('/dashboard');
+        navigate("/dashboard");
       }
     } catch (error) {
       setError(
-        error.response?.data?.message || 
-        'Error creating account. Please try again.'
+        error.response?.data?.message ||
+          "Error creating account. Please try again."
       );
     } finally {
       setIsLoading(false);
@@ -140,12 +144,8 @@ function SignUp() {
               minLength="6"
             />
           </div>
-          <button 
-            type="submit" 
-            className="signup-button"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Creating Account...' : 'Sign Up'}
+          <button type="submit" className="signup-button" disabled={isLoading}>
+            {isLoading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
       </div>

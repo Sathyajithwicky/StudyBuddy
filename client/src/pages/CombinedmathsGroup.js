@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./StudyGroup.css"; // Using the same CSS file as Physics group
-import ChatBot from "../components/ChatBot";
+import ChatBot from "../components/Bots/ChatBotMaths";
 
 const CombinedMathsGroup = () => {
   const [activeTab, setActiveTab] = useState("Study Material");

@@ -6,15 +6,14 @@ import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import messagesRoutes from "./routes/messages.js";
 import rateLimit from "express-rate-limit";
-import { OpenAI } from "openai";
-import { GoogleGenAI } from "@google/genai";
+import chatRoute from "./routes/chatRoute.js";
 
 dotenv.config();
 const app = express();
 
-const geminiAPI = new GoogleGenAI({
-  apiKey: process.env.GOOGLEGENAI,
-});
+// const geminiAPI = new GoogleGenAI({
+//   apiKey: process.env.GOOGLEGENAI,
+// });
 
 // CORS configuration
 app.use(
@@ -80,31 +79,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/messages", messagesRoutes);
 
 // Chatbot Route - Using open ai
-app.post("/api/chatbot", async (req, res) => {
-  try {
-    const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: "Message is required" });
-    }
-
-    // const response = await openai.chat.completions.create({
-    //   model: "gpt-3.5-turbo",
-    //   messages: [{ role: "user", content: message }],
-    // });
-
-    const response = await geminiAPI.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: message,
-    });
-
-    const botMessage = response.text;
-    res.json({ message: botMessage });
-  } catch (error) {
-    console.error("Chatbot error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-// Test route for OpenAI API
+app.use("/api/chat", chatRoute);
 
 // 404 handler
 app.use((req, res) => {
