@@ -32,12 +32,8 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/admin" element={<Admin />} />
 
-          {/* Protected routes */}
-          <Route path="/pomodoro" element={
-            <ProtectedRoute>
-              <Pomodoro />
-            </ProtectedRoute>
-          } />
+          {/* Public routes - Pomodoro accessible without login */}
+          <Route path="/pomodoro" element={<Pomodoro />} />
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />

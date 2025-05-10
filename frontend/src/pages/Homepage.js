@@ -67,13 +67,9 @@ function HomePage() {
     return () => clearInterval(timer);
   }, [userData?.examDate]);
 
-  // Add handler for pomodoro button
+  // Add handler for pomodoro button - accessible without login
   const handlePomodoroClick = () => {
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: '/pomodoro' } });
-    } else {
-      navigate('/pomodoro');
-    }
+    navigate('/pomodoro');
   };
 
   return (

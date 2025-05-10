@@ -72,12 +72,6 @@ function NavBar() {
           <Link 
             to="/pomodoro" 
             className="nav-link"
-            onClick={(e) => {
-              if (!isAuthenticated) {
-                e.preventDefault();
-                navigate('/login', { state: { from: '/pomodoro' } });
-              }
-            }}
           >
             Pomodoro Timer
           </Link>

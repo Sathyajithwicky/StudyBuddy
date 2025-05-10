@@ -2,10 +2,16 @@ import React, { useState, useEffect } from 'react';
 import './Pomodoro.css';
 
 function Pomodoro() {
-  const [minutes, setMinutes] = useState(25);
+  // Load settings from localStorage or use defaults
+  const [minutes, setMinutes] = useState(() => {
+    const savedMinutes = localStorage.getItem('pomodoro_minutes');
+    return savedMinutes ? parseInt(savedMinutes) : 25;
+  });
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
-  const [sessionType, setSessionType] = useState('work'); // 'work' or 'break'
+  const [sessionType, setSessionType] = useState(() => {
+    return localStorage.getItem('pomodoro_session_type') || 'work';
+  }); // 'work' or 'break'
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
@@ -147,7 +153,14 @@ function Pomodoro() {
     setIsActive(false);
     setMinutes(mins);
     setSeconds(0);
+    // Save to localStorage
+    localStorage.setItem('pomodoro_minutes', mins.toString());
   };
+  
+  // Save session type to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('pomodoro_session_type', sessionType);
+  }, [sessionType]);
 
   return (
     <div className="pomodoro-container">
